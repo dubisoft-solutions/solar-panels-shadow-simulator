@@ -9,15 +9,14 @@ export const PANEL_SPECS = {
   length: 1.762,     // m (X direction)
   width: 1.134,      // m (Y direction)
   thickness: 0.04,   // m
-  cellColumns: 12,   // columns
-  cellRows: 8,       // rows
+  cellColumns: 16,   // columns
+  cellRows: 6,       // rows
   stringCount: 3     // internal strings
 }
 
 export const PLATFORM_SPECS = {
   tiltAngle: 13,           // degrees
-  defaultConnectorLength: 1.320,  // m (configurable)
-  westParapetOffset: 0.1   // m
+  defaultConnectorLength: 1.320  // m (configurable)
 }
 
 // Visual settings
@@ -150,18 +149,16 @@ function SolarPanelCells({ specs }: SolarPanelCellsProps) {
   const cellHeight = specs.width / specs.cellRows
   const cellThickness = 0.005  // Made thicker so they're visible
   
-  const stringHeight = specs.width / specs.stringCount
-  
   const cells = []
-  
-  // Create 96 half-cells (12x8 grid)
+
+  // Create 96 cells (16x6 grid)
   for (let row = 0; row < specs.cellRows; row++) {
     for (let col = 0; col < specs.cellColumns; col++) {
       // Determine which string this cell belongs to - strings run horizontally (by rows)
-      // String 0: rows 0-2, String 1: rows 3-5, String 2: rows 6-7
+      // String 0: rows 0-1, String 1: rows 2-3, String 2: rows 4-5
       let stringIndex = 0
-      if (row >= 6) stringIndex = 2
-      else if (row >= 3) stringIndex = 1
+      if (row >= 4) stringIndex = 2
+      else if (row >= 2) stringIndex = 1
       
       // Calculate position relative to panel center - corrected for roof coordinates
       const x = (col * cellWidth) - (specs.length / 2) + (cellWidth / 2)
@@ -182,7 +179,7 @@ function SolarPanelCells({ specs }: SolarPanelCellsProps) {
   
   // Add string dividers (visual distinction between strings) - horizontal dividers
   // Dividers should be between rows where strings change
-  const stringRowCounts = [3, 3, 2] // rows per string for 8 total rows, 3 strings
+  const stringRowCounts = [2, 2, 2] // rows per string for 6 total rows, 3 strings
   let currentRow = 0
   
   for (let i = 0; i < specs.stringCount - 1; i++) {
