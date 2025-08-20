@@ -1,7 +1,8 @@
 'use client'
 
 import * as THREE from 'three'
-import { useRef } from 'react'
+import { useRef, useState, useEffect } from 'react'
+import { useThree, useFrame } from '@react-three/fiber'
 
 // Hyundai HiT-H450LE-FB Panel Specifications
 export const PANEL_SPECS = {
@@ -27,6 +28,117 @@ export const VISUAL_SETTINGS = {
   stringColors: ['#ff7675', '#74b9ff', '#00b894'],
   platformColor: '#E8E8E8',
   connectorColor: '#888888'
+}
+
+
+interface SmartSolarCellProps {
+  position: [number, number, number]
+  geometry: [number, number, number]
+  baseColor: string
+  cellId: string
+}
+
+function SmartSolarCell({ position, geometry, baseColor, cellId }: SmartSolarCellProps) {
+  const meshRef = useRef<THREE.Mesh>(null)
+  const { scene } = useThree()
+  const [shadowIntensity, setShadowIntensity] = useState(0)
+  const frameCount = useRef(0)
+  
+  useFrame(() => {
+    // Only check every 10 frames to reduce performance impact
+    frameCount.current++
+    if (frameCount.current % 10 !== 0) return
+    
+    if (meshRef.current) {
+      // Find the directional light in the scene
+      let directionalLight: THREE.DirectionalLight | null = null
+      scene.traverse((child) => {
+        if (child instanceof THREE.DirectionalLight) {
+          directionalLight = child
+        }
+      })
+      
+      if (directionalLight) {
+        // Get world position of this cell
+        const worldPos = new THREE.Vector3()
+        meshRef.current.getWorldPosition(worldPos)
+        
+        // Calculate direction from cell to light
+        const lightDirection = new THREE.Vector3()
+        lightDirection.subVectors(directionalLight.position, worldPos).normalize()
+        
+        // Use just center point and 4 corner points (5 samples total)
+        const samplePoints = 5
+        let shadowedSamples = 0
+        
+        const samples = [
+          [0, 0], // center
+          [-0.4, -0.4], // corners
+          [0.4, -0.4],
+          [0.4, 0.4],
+          [-0.4, 0.4]
+        ]
+        
+        for (const [xOffset, zOffset] of samples) {
+          const samplePos = worldPos.clone()
+          samplePos.x += xOffset * geometry[0]
+          samplePos.z += zOffset * geometry[2]
+          samplePos.y += 0.001 // slightly above surface
+          
+          // Create raycaster for this sample point
+          const raycaster = new THREE.Raycaster()
+          raycaster.set(samplePos, lightDirection)
+          
+          // Check for shadows at this sample point
+          const intersects = raycaster.intersectObjects(scene.children, true)
+          const blockingIntersects = intersects.filter(hit => {
+            // More specific filtering
+            const isNotSelf = hit.object !== meshRef.current
+            const isNotTooClose = hit.distance > 0.05
+            const isWithinRange = hit.distance < 10
+            
+            // Check if the hit object is actually a shadow-casting object
+            // Exclude small objects like string dividers and cells themselves
+            const mesh = hit.object as THREE.Mesh
+            const geometry = mesh.geometry
+            if (geometry && geometry instanceof THREE.BoxGeometry) {
+              const params = geometry.parameters
+              // Only consider objects larger than a cell (likely panels or buildings)
+              const isLargeEnough = params.width > 0.5 || params.height > 0.5 || params.depth > 0.5
+              return isNotSelf && isNotTooClose && isWithinRange && isLargeEnough
+            }
+            
+            // For non-box geometries, use distance-based filtering
+            return isNotSelf && isNotTooClose && isWithinRange
+          })
+          
+          if (blockingIntersects.length > 0) {
+            shadowedSamples++
+          }
+        }
+        
+        // Calculate shadow intensity (0 = no shadow, 1 = full shadow)
+        const intensity = shadowedSamples / samplePoints
+        setShadowIntensity(intensity)
+      }
+    }
+  })
+  
+  return (
+    <mesh
+      ref={meshRef}
+      position={position}
+      castShadow
+      receiveShadow
+    >
+      <boxGeometry args={geometry} />
+      <meshLambertMaterial 
+        color={shadowIntensity > 0 ? '#FFFF00' : baseColor}
+        opacity={shadowIntensity > 0 ? 0.6 : 0.8}
+        transparent
+      />
+    </mesh>
+  )
 }
 
 interface SolarPanelCellsProps {
@@ -57,19 +169,13 @@ function SolarPanelCells({ specs }: SolarPanelCellsProps) {
       const z = (row * cellHeight) - (specs.width / 2) + (cellHeight / 2)
       
       cells.push(
-        <mesh
+        <SmartSolarCell
           key={`cell-${row}-${col}`}
+          cellId={`cell-${row}-${col}`}
           position={[x, y, z]}
-          castShadow
-          receiveShadow
-        >
-          <boxGeometry args={[cellWidth * 0.95, cellThickness, cellHeight * 0.95]} />
-          <meshLambertMaterial 
-            color={VISUAL_SETTINGS.stringColors[stringIndex] || VISUAL_SETTINGS.cellColor}
-            opacity={0.8}
-            transparent
-          />
-        </mesh>
+          geometry={[cellWidth * 0.95, cellThickness, cellHeight * 0.95]}
+          baseColor={VISUAL_SETTINGS.stringColors[stringIndex] || VISUAL_SETTINGS.cellColor}
+        />
       )
     }
   }
