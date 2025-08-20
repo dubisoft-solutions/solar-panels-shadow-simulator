@@ -127,7 +127,7 @@ function RoofObjects() {
         position={[
           (0.15 + 0.1 + 1.762/2) - widthX / 2,  // 10cm from west parapet + half panel length, converted to center-relative
           heightY + houseSettings.roof.dimensions.thickness,  // on roof surface
-          (0.1 + 1.134/2) - depthZ / 2   // 10cm from south edge + half panel width, converted to center-relative
+          (0.1 + 1.134/2 + 0.1) - depthZ / 2   // 10cm from south edge + half panel width + 10cm gap from north, converted to center-relative
         ]}
       >
         <RoofSolarInstallation 
