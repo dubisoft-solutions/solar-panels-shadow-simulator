@@ -25,6 +25,7 @@ export default function ShadowSimulator() {
     return simulatorSettings.defaultDateTime?.time ?? 12
   })
   const [sunPosition, setSunPosition] = useState<SunPosition>({ azimuth: 180, elevation: 45 })
+  const [connectorLength, setConnectorLength] = useState(1.320)
 
   const calculateSunPosition = (date: Date, timeHours: number): SunPosition => {
     // Create a new date with the specified time
@@ -70,15 +71,17 @@ export default function ShadowSimulator() {
           minDistance={5}
           maxDistance={50}
         />
-        <Scene3D sunPosition={sunPosition} />
+        <Scene3D sunPosition={sunPosition} connectorLength={connectorLength} />
       </Canvas>
       
       <Controls
         date={date}
         time={time}
         sunPosition={sunPosition}
+        connectorLength={connectorLength}
         onDateChange={setDate}
         onTimeChange={setTime}
+        onConnectorLengthChange={setConnectorLength}
       />
     </div>
   )

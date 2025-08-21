@@ -12,9 +12,10 @@ interface Scene3DProps {
     azimuth: number
     elevation: number
   }
+  connectorLength?: number
 }
 
-function Roof() {
+function Roof({ connectorLength }: { connectorLength: number }) {
   const houseWidthX = houseSettings.dimensions.northSideLength
   const houseDepthZ = houseSettings.dimensions.westSideLength
   const heightY = houseSettings.dimensions.height
@@ -114,12 +115,12 @@ function Roof() {
       })()}
       
       {/* Roof Objects - now nested inside roof coordinate system */}
-      <RoofObjects />
+      <RoofObjects connectorLength={connectorLength} />
     </group>
   )
 }
 
-function RoofObjects() {
+function RoofObjects({ connectorLength }: { connectorLength: number }) {
   const roofThickness = houseSettings.roof.dimensions.thickness
   const houseHeight = houseSettings.dimensions.height
   const houseWidth = houseSettings.dimensions.northSideLength
@@ -210,7 +211,7 @@ function RoofObjects() {
               configuration={{
                 rows: 6,
                 columns: 1,
-                connectorLength: 1.320
+                connectorLength: connectorLength
               }}
             />
           </group>
@@ -221,7 +222,7 @@ function RoofObjects() {
       {(() => {
         // Edge-based position calculation for SW installation
         const swInstallationEdgePosition = {
-          x: houseWidth - 1.320 * 2,  // 10cm from west parapet (15cm parapet + 10cm gap)
+          x: houseWidth - connectorLength * 2,  // panels positioned based on connector length
           y: houseHeight + roofThickness,  // house height + on roof surface
           z: 0.15 + PANEL_SPECS.length  // 10cm from north parapet (15cm parapet + 10cm gap)
         }
@@ -235,7 +236,7 @@ function RoofObjects() {
               configuration={{
                 rows: 2,  // 2 panels in a row
                 columns: 1,
-                connectorLength: 1.320
+                connectorLength: connectorLength
               }}
             />
           </group>
@@ -247,7 +248,7 @@ function RoofObjects() {
       {(() => {
         // Edge-based position calculation for SW installation
         const swInstallationEdgePosition = {
-          x: houseWidth - 1.320 * 2,  // 10cm from west parapet (15cm parapet + 10cm gap)
+          x: houseWidth - connectorLength * 2,  // panels positioned based on connector length
           y: houseHeight + roofThickness,  // house height + on roof surface
           z: houseDepth + 0.15  // 10cm from north parapet (15cm parapet + 10cm gap)
         }
@@ -261,7 +262,7 @@ function RoofObjects() {
               configuration={{
                 rows: 2,  // 2 panels in a row
                 columns: 2,
-                connectorLength: 1.320
+                connectorLength: connectorLength
               }}
             />
           </group>
@@ -347,7 +348,7 @@ function Compass() {
   )
 }
 
-export default function Scene3D({ sunPosition }: Scene3DProps) {
+export default function Scene3D({ sunPosition, connectorLength = 1.320 }: Scene3DProps) {
   const lightRef = useRef<THREE.DirectionalLight>(null)
 
   useFrame(() => {
@@ -388,7 +389,7 @@ export default function Scene3D({ sunPosition }: Scene3DProps) {
       
       <Ground />
       <House />
-      <Roof />
+      <Roof connectorLength={connectorLength} />
       <Compass />
       
       <gridHelper args={[50, 50, '#444444', '#888888']} />
