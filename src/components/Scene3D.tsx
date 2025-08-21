@@ -4,7 +4,7 @@ import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { houseSettings } from '@/config/houseSettings'
-import RoofSolarInstallation from './SolarPanels'
+import RoofSolarInstallation, { PANEL_SPECS } from './SolarPanels'
 import { CoordinateTransformationService } from '@/services/CoordinateTransformationService'
 
 interface Scene3DProps {
@@ -194,13 +194,16 @@ function RoofObjects() {
       {(() => {
         // Edge-based position calculation (business logic)
         const installationEdgePosition = {
-          x: 0.1 + 0.15,  // 10cm from west parapet (15cm parapet + 10cm gap)
+          x: 0.1 + 0.15 + PANEL_SPECS.length,  // 10cm from west parapet (15cm parapet + 10cm gap)
           y: houseHeight + roofThickness,  // house height + on roof surface  
-          z: houseSettings.roof.position.y + houseSettings.roof.dimensions.depth   // at actual south edge
+          z: houseSettings.roof.position.y + houseSettings.roof.dimensions.depth - 0.15 - 0.1   // at actual south edge
         }
         
         return (
-          <group position={CoordinateTransformationService.toThreeJsPosition(installationEdgePosition)}>
+          <group 
+            position={CoordinateTransformationService.toThreeJsPosition(installationEdgePosition)}
+            rotation={[0, Math.PI, 0]}
+          >
             <RoofSolarInstallation 
               configuration={{
                 rows: 6,
