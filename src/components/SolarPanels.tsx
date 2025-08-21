@@ -277,14 +277,14 @@ export default function RoofSolarInstallation({
   const columns = configuration.columns || 1
   const connectorLength = configuration.connectorLength || PLATFORM_SPECS.defaultConnectorLength
   
-  // Calculate spacing using shadow simulation formulas
+  // Calculate spacing - total row pitch should be exactly connectorLength (1320mm)
   const W = PANEL_SPECS.width  // Panel short side (tilt axis): 1.134 m
   const beta = PLATFORM_SPECS.tiltAngle * Math.PI / 180  // Tilt angle in radians: 13°
   const D = W * Math.cos(beta)  // Projected panel depth on roof: D = W·cosβ ≈ 1.105 m
-  const G = connectorLength - D  // Air gap: G = P - D (P is connector length)
+  const G = connectorLength - D  // Air gap: G = connectorLength - projected depth
   
-  // Total spacing between panel centers = projected depth + air gap
-  const panelSpacing = D + G
+  // Total spacing between panel centers = exactly connectorLength (1320mm)
+  const panelSpacing = connectorLength
   
   // Platform dimensions
   const platformDimensions = {
@@ -321,9 +321,7 @@ export default function RoofSolarInstallation({
   const connectors = []
   for (let i = 0; i < rows - 1; i++) {
     // Calculate connector position in the air gap between panels
-    const connectorStart = i * panelSpacing + D
-    const connectorEnd = (i + 1) * panelSpacing
-    const connectorZ = (connectorStart + connectorEnd) / 2
+    const connectorZ = (i + 0.5) * panelSpacing + D / 2
     
     // Connector dimensions
     const connectorDimensions = {
