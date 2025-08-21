@@ -44,9 +44,9 @@ function SmartSolarCell({ position, geometry, baseColor, cellId }: SmartSolarCel
   const frameCount = useRef(0)
   
   useFrame(() => {
-    // Only check every 10 frames to reduce performance impact
+    // Only check every 30 frames to reduce performance impact
     frameCount.current++
-    if (frameCount.current % 10 !== 0) return
+    if (frameCount.current % 30 !== 0) return
     
     if (meshRef.current) {
       // Find the directional light in the scene
@@ -57,7 +57,7 @@ function SmartSolarCell({ position, geometry, baseColor, cellId }: SmartSolarCel
         }
       })
       
-      if (directionalLight) {
+      if (directionalLight && (directionalLight as THREE.DirectionalLight).intensity > 0) {
         // Get world position of this cell
         const worldPos = new THREE.Vector3()
         meshRef.current.getWorldPosition(worldPos)
@@ -66,59 +66,33 @@ function SmartSolarCell({ position, geometry, baseColor, cellId }: SmartSolarCel
         const lightDirection = new THREE.Vector3()
         lightDirection.subVectors(directionalLight.position, worldPos).normalize()
         
-        // Use just center point and 4 corner points (5 samples total)
-        const samplePoints = 5
-        let shadowedSamples = 0
+        // Single raycast from cell center to light
+        const raycaster = new THREE.Raycaster()
+        raycaster.set(worldPos, lightDirection)
         
-        const samples = [
-          [0, 0], // center
-          [-0.4, -0.4], // corners
-          [0.4, -0.4],
-          [0.4, 0.4],
-          [-0.4, 0.4]
-        ]
+        // Check for blocking objects
+        const intersects = raycaster.intersectObjects(scene.children, true)
         
-        for (const [xOffset, zOffset] of samples) {
-          const samplePos = worldPos.clone()
-          samplePos.x += xOffset * geometry[0]
-          samplePos.z += zOffset * geometry[2]
-          samplePos.y += 0.001 // slightly above surface
+        // Find first significant blocking object
+        const hasBlocker = intersects.some(hit => {
+          if (hit.object === meshRef.current) return false // Skip self
+          if (hit.distance < 0.1) return false // Too close, likely noise
+          if (hit.distance > 50) return false // Too far to be relevant
           
-          // Create raycaster for this sample point
-          const raycaster = new THREE.Raycaster()
-          raycaster.set(samplePos, lightDirection)
-          
-          // Check for shadows at this sample point
-          const intersects = raycaster.intersectObjects(scene.children, true)
-          const blockingIntersects = intersects.filter(hit => {
-            // More specific filtering
-            const isNotSelf = hit.object !== meshRef.current
-            const isNotTooClose = hit.distance > 0.05
-            const isWithinRange = hit.distance < 10
-            
-            // Check if the hit object is actually a shadow-casting object
-            // Exclude small objects like string dividers and cells themselves
-            const mesh = hit.object as THREE.Mesh
-            const geometry = mesh.geometry
-            if (geometry && geometry instanceof THREE.BoxGeometry) {
-              const params = geometry.parameters
-              // Only consider objects larger than a cell (likely panels or buildings)
-              const isLargeEnough = params.width > 0.5 || params.height > 0.5 || params.depth > 0.5
-              return isNotSelf && isNotTooClose && isWithinRange && isLargeEnough
-            }
-            
-            // For non-box geometries, use distance-based filtering
-            return isNotSelf && isNotTooClose && isWithinRange
-          })
-          
-          if (blockingIntersects.length > 0) {
-            shadowedSamples++
+          // Check if it's a substantial object
+          const mesh = hit.object as THREE.Mesh
+          if (mesh.geometry instanceof THREE.BoxGeometry) {
+            const { width, height, depth } = mesh.geometry.parameters
+            // Must be larger than a typical cell to cast meaningful shadows
+            return width > 0.2 || height > 0.2 || depth > 0.2
           }
-        }
+          
+          return true // Non-box objects assumed to be substantial
+        })
         
-        // Calculate shadow intensity (0 = no shadow, 1 = full shadow)
-        const intensity = shadowedSamples / samplePoints
-        setShadowIntensity(intensity)
+        setShadowIntensity(hasBlocker ? 1 : 0)
+      } else {
+        setShadowIntensity(0)
       }
     }
   })
