@@ -126,9 +126,9 @@ function RoofObjects() {
       {/* Solar Panel Installation - now roof-relative coordinates */}
       <group 
         position={[
-          0.15 + 0.1,  // 10cm from west parapet (15cm parapet + 10cm gap)
+          0.1 + 0.15,  // 10cm from west parapet (15cm parapet + 10cm gap)
           houseHeight + roofThickness,  // house height + on roof surface
-          0, //houseSettings.roof.position.y + houseSettings.roof.dimensions.depth   // at actual south edge
+          houseSettings.roof.position.y + houseSettings.roof.dimensions.depth   // at actual south edge
         ]}
       >
         <RoofSolarInstallation 

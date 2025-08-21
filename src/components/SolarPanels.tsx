@@ -230,11 +230,11 @@ export function Platform({
   
   return (
     <group ref={platformRef} position={position}>
-      {/* Platform base - flat on ground, not tilted */}
+      {/* Platform base - positioned from west/north edges */}
       <mesh 
         castShadow 
         receiveShadow 
-        position={[0, 0, 0]}
+        position={[platformLength / 2, platformThickness / 2, platformWidth / 2]}
       >
         <boxGeometry args={[platformLength, platformThickness, platformWidth]} />
         <meshLambertMaterial color={VISUAL_SETTINGS.platformColor} />
@@ -243,7 +243,7 @@ export function Platform({
       {/* Solar panel (if included) - front edge at front of platform, tilted upward */}
       {includePanel && (
         <SolarPanel 
-          position={[0, rearElevation / 2 + platformThickness / 2 + PANEL_SPECS.thickness / 2, (platformWidth - PANEL_SPECS.width) / 2]}
+          position={[PANEL_SPECS.length / 2, rearElevation / 2 + platformThickness / 2 + PANEL_SPECS.thickness / 2, (platformWidth - PANEL_SPECS.width) / 2]}
           rotation={[tiltRadians, 0, 0]}
         />
       )}
@@ -352,7 +352,8 @@ export default function RoofSolarInstallation({
     const connectorStart = i * panelSpacing + D
     const connectorEnd = (i + 1) * panelSpacing - D
     const connectorZ = (connectorStart + connectorEnd) / 2
-    const sideOffset = PANEL_SPECS.length * 0.3 // Position on the sides
+    const leftSideX = PANEL_SPECS.length * 0.3 // Position on left side
+    const rightSideX = PANEL_SPECS.length * 0.7 // Position on right side
     
     // Left side connector
     connectors.push(
@@ -360,7 +361,7 @@ export default function RoofSolarInstallation({
         key={`connector-${i}-left`}
         castShadow 
         receiveShadow 
-        position={[-sideOffset, 0, connectorZ]}
+        position={[leftSideX, 0.01, connectorZ]}
       >
         <boxGeometry args={[0.05, 0.02, G]} />
         <meshLambertMaterial color={VISUAL_SETTINGS.connectorColor} />
@@ -373,7 +374,7 @@ export default function RoofSolarInstallation({
         key={`connector-${i}-right`}
         castShadow 
         receiveShadow 
-        position={[sideOffset, 0, connectorZ]}
+        position={[rightSideX, 0.01, connectorZ]}
       >
         <boxGeometry args={[0.05, 0.02, G]} />
         <meshLambertMaterial color={VISUAL_SETTINGS.connectorColor} />
