@@ -243,7 +243,7 @@ export function Platform({
       {/* Solar panel (if included) - front edge at front of platform, tilted upward */}
       {includePanel && (
         <SolarPanel 
-          position={[0, rearElevation / 2 + platformThickness / 2 + PANEL_SPECS.thickness / 2, -(platformWidth - PANEL_SPECS.width) / 2]}
+          position={[0, rearElevation / 2 + platformThickness / 2 + PANEL_SPECS.thickness / 2, (platformWidth - PANEL_SPECS.width) / 2]}
           rotation={[tiltRadians, 0, 0]}
         />
       )}
@@ -329,10 +329,10 @@ export default function RoofSolarInstallation({
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < columns; col++) {
       // Position relative to installation origin
-      // First panel at row 0 should be at the front (z=0), others follow behind
+      // First panel's front edge should be at z=0, so offset by half projected panel depth
       const x = col * (PANEL_SPECS.length + 0.2)
       const y = 0  
-      const z = row * panelSpacing
+      const z = row * panelSpacing + D / 2
       
       panels.push(
         <Platform

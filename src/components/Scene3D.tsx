@@ -20,13 +20,13 @@ function Roof() {
   const rotationFromNorth = houseSettings.orientation.rotationFromNorth * Math.PI / 180
   const roof = houseSettings.roof
 
-  // Convert roof position from house-relative coordinates to Three.js center-relative
-  const roofX = (roof.position.x + roof.dimensions.width / 2) - houseWidthX / 2   
-  const roofZ = (roof.position.y + roof.dimensions.depth / 2) - houseDepthZ / 2   
+  // Use wall-relative coordinates directly  
+  const roofX = roof.position.x + roof.dimensions.width / 2   
+  const roofZ = roof.position.y + roof.dimensions.depth / 2   
   const roofY = heightY + roof.position.z + roof.dimensions.thickness / 2
 
   return (
-    <group rotation={[0, rotationFromNorth, 0]}>
+    <group rotation={[0, rotationFromNorth, 0]} position={[-houseWidthX / 2, 0, -houseDepthZ / 2]}>
       {/* Main roof surface */}
       <mesh 
         castShadow 
@@ -72,24 +72,25 @@ function Roof() {
           <meshLambertMaterial color="#CCCCCC" />
         </mesh>
       )}
+      
+      {/* Roof Objects - now nested inside roof coordinate system */}
+      <RoofObjects />
     </group>
   )
 }
 
 function RoofObjects() {
-  const widthX = houseSettings.dimensions.northSideLength
-  const depthZ = houseSettings.dimensions.westSideLength
-  const heightY = houseSettings.dimensions.height
-  const rotationFromNorth = houseSettings.orientation.rotationFromNorth * Math.PI / 180
+  const roofThickness = houseSettings.roof.dimensions.thickness
+  const houseHeight = houseSettings.dimensions.height
 
   return (
-    <group rotation={[0, rotationFromNorth, 0]}>
+    <>
       {houseSettings.roofObjects.map((obj) => {
-        // Convert from house-relative coordinates to Three.js coordinates
-        // House center is at (0,0,0), so we need to offset from center
-        const x = obj.position.x - widthX / 2   // convert from west-side distance to center-relative
-        const z = obj.position.z - depthZ / 2   // convert from north-side distance to center-relative
-        const y = heightY + houseSettings.roof.dimensions.thickness + obj.position.y + obj.dimensions.height / 2  // on top of roof + elevation + half object height
+        // Now using roof-relative coordinates - RoofObjects inherits roof's positioning/rotation
+        // X=0 is west edge of roof, Z=0 is north edge of roof
+        const x = obj.position.x   // distance from roof west edge
+        const z = obj.position.z   // distance from roof north edge  
+        const y = houseHeight + roofThickness + obj.position.y + obj.dimensions.height / 2  // house height + above roof surface + elevation + half object height
 
         return (
           <group key={obj.id}>
@@ -122,12 +123,12 @@ function RoofObjects() {
         )
       })}
       
-      {/* Solar Panel Installation - positioned like chimney */}
+      {/* Solar Panel Installation - now roof-relative coordinates */}
       <group 
         position={[
-          (0.15 + 0.1 + 1.762/2) - widthX / 2,  // 10cm from west parapet + half panel length, converted to center-relative
-          heightY + houseSettings.roof.dimensions.thickness,  // on roof surface
-          (0.1 + 1.134/2 + 0.1) - depthZ / 2   // 10cm from south edge + half panel width + 10cm gap from north, converted to center-relative
+          0.15 + 0.1,  // 10cm from west parapet (15cm parapet + 10cm gap)
+          houseHeight + roofThickness,  // house height + on roof surface
+          0, //houseSettings.roof.position.y + houseSettings.roof.dimensions.depth   // at actual south edge
         ]}
       >
         <RoofSolarInstallation 
@@ -138,7 +139,7 @@ function RoofObjects() {
           }}
         />
       </group>
-    </group>
+    </>
   )
 }
 
@@ -154,26 +155,26 @@ function House() {
   const rotationFromNorth = houseSettings.orientation.rotationFromNorth * Math.PI / 180
 
   return (
-    <group ref={houseRef} rotation={[0, rotationFromNorth, 0]}>
-      <mesh castShadow receiveShadow position={[0, heightY / 2, 0]}>
+    <group ref={houseRef} rotation={[0, rotationFromNorth, 0]} position={[-widthX / 2, 0, -depthZ / 2]}>
+      <mesh castShadow receiveShadow position={[widthX / 2, heightY / 2, depthZ / 2]}>
         <boxGeometry args={[widthX, heightY, depthZ]} />
         <meshLambertMaterial color="#8B4513" />
       </mesh>
       
-      {/* Entrance on south side (positive Z direction) */}
-      <mesh castShadow position={[0, 0.1, depthZ / 2 + 0.05]}>
+      {/* Entrance on south side */}
+      <mesh castShadow position={[widthX / 2, 0.1, depthZ + 0.05]}>
         <boxGeometry args={[1.2, 0.2, 0.1]} />
         <meshLambertMaterial color="#654321" />
       </mesh>
       
       {/* Door frame on south side */}
-      <mesh position={[0, heightY * 0.4, depthZ / 2 + 0.01]}>
+      <mesh position={[widthX / 2, heightY * 0.4, depthZ + 0.01]}>
         <boxGeometry args={[0.8, 1.8, 0.02]} />
         <meshLambertMaterial color="#2D1B14" />
       </mesh>
       
       {/* Door handle */}
-      <mesh position={[0.3, heightY * 0.4, depthZ / 2 + 0.02]}>
+      <mesh position={[widthX / 2 + 0.3, heightY * 0.4, depthZ + 0.02]}>
         <sphereGeometry args={[0.03]} />
         <meshLambertMaterial color="#FFD700" />
       </mesh>
@@ -250,17 +251,16 @@ export default function Scene3D({ sunPosition }: Scene3DProps) {
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
         shadow-camera-far={100}
-        shadow-camera-left={-6}
-        shadow-camera-right={6}
-        shadow-camera-top={6}
-        shadow-camera-bottom={-6}
+        shadow-camera-left={-15}
+        shadow-camera-right={15}
+        shadow-camera-top={15}
+        shadow-camera-bottom={-15}
         shadow-camera-near={0.1}
       />
       
       <Ground />
       <House />
       <Roof />
-      <RoofObjects />
       <Compass />
       
       <gridHelper args={[50, 50, '#444444', '#888888']} />

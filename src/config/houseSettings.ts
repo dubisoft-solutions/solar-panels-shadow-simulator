@@ -13,8 +13,8 @@ export interface RoofObject {
   id: string
   type: 'chimney' | 'antenna' | 'vent'
   position: {
-    x: number // meters from west (left) side of house
-    z: number // meters from north (top) side of house  
+    x: number // meters from west wall (X=0 at west wall)
+    z: number // meters from north wall (Z=0 at north wall)  
     y: number // elevation above roof level (meters)
   }
   dimensions: {
@@ -28,8 +28,8 @@ export interface RoofObject {
 
 export interface RoofSettings {
   position: {
-    x: number // meters from west (left) side of house
-    y: number // meters from north (top) side of house
+    x: number // meters from west wall (X=0 at west wall)
+    y: number // meters from north wall (Z=0 at north wall)
     z: number // elevation above house top (meters)
   }
   dimensions: {
