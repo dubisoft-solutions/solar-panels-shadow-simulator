@@ -302,16 +302,10 @@ export default function RoofSolarInstallation({
         z: row * panelSpacing               // Distance from installation front edge
       }
       
-      // Transform to center-based position using service
-      const centerPosition = CoordinateTransformationService.edgeToCenter(
-        edgePosition,
-        platformDimensions
-      )
-      
       panels.push(
         <Platform
           key={`panel-${row}-${col}`}
-          position={CoordinateTransformationService.toThreeJsPosition(centerPosition)}
+          position={CoordinateTransformationService.edgeToThreeJs(edgePosition, platformDimensions)}
           dimensions={{
             length: platformDimensions.width,
             width: platformDimensions.depth,
@@ -344,17 +338,12 @@ export default function RoofSolarInstallation({
       y: 0,
       z: connectorZ - connectorDimensions.depth / 2
     }
-    const leftCenterPosition = CoordinateTransformationService.edgeToCenter(
-      leftEdgePosition,
-      connectorDimensions
-    )
-    
     connectors.push(
       <mesh
         key={`connector-${i}-left`}
         castShadow 
         receiveShadow 
-        position={CoordinateTransformationService.toThreeJsPosition(leftCenterPosition)}
+        position={CoordinateTransformationService.edgeToThreeJs(leftEdgePosition, connectorDimensions)}
       >
         <boxGeometry args={[connectorDimensions.width, connectorDimensions.height, connectorDimensions.depth]} />
         <meshLambertMaterial color={VISUAL_SETTINGS.connectorColor} />
@@ -367,17 +356,12 @@ export default function RoofSolarInstallation({
       y: 0,
       z: connectorZ - connectorDimensions.depth / 2
     }
-    const rightCenterPosition = CoordinateTransformationService.edgeToCenter(
-      rightEdgePosition,
-      connectorDimensions
-    )
-    
     connectors.push(
       <mesh
         key={`connector-${i}-right`}
         castShadow 
         receiveShadow 
-        position={CoordinateTransformationService.toThreeJsPosition(rightCenterPosition)}
+        position={CoordinateTransformationService.edgeToThreeJs(rightEdgePosition, connectorDimensions)}
       >
         <boxGeometry args={[connectorDimensions.width, connectorDimensions.height, connectorDimensions.depth]} />
         <meshLambertMaterial color={VISUAL_SETTINGS.connectorColor} />

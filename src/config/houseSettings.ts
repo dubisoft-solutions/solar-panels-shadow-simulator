@@ -123,9 +123,9 @@ export const houseSettings: HouseSettings = {
         diameter: 0.1,  // 10cm
         height: 0.3,    // 30cm
         position: {
-          x: 0,  // center of chimney
-          y: 0,  // on top of chimney
-          z: 0   // center of chimney
+          x: 0.1,  // 10cm from west side of chimney base
+          y: 0,    // on top of chimney
+          z: 0.25 - 0.1 / 2  // center of chimney (north-south): chimney depth/2 - pipe diameter = 0.5m/2 - 0.1/2 = 0.2m
         },
         color: '#767373'
       },

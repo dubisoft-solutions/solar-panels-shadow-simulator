@@ -27,16 +27,6 @@ function Roof() {
     y: heightY + roof.position.z,  // house height + roof elevation
     z: roof.position.y
   }
-  
-  // Transform to center-based position using service
-  const roofCenterPosition = CoordinateTransformationService.edgeToCenter(
-    roofEdgePosition,
-    {
-      width: roof.dimensions.width,
-      height: roof.dimensions.thickness, 
-      depth: roof.dimensions.depth
-    }
-  )
 
   return (
     <group rotation={[0, rotationFromNorth, 0]} position={[-houseWidthX / 2, 0, -houseDepthZ / 2]}>
@@ -44,7 +34,14 @@ function Roof() {
       <mesh 
         castShadow 
         receiveShadow 
-        position={CoordinateTransformationService.toThreeJsPosition(roofCenterPosition)}
+        position={CoordinateTransformationService.edgeToThreeJs(
+          roofEdgePosition,
+          {
+            width: roof.dimensions.width,
+            height: roof.dimensions.thickness,
+            depth: roof.dimensions.depth
+          }
+        )}
       >
         <boxGeometry args={[roof.dimensions.width, roof.dimensions.thickness, roof.dimensions.depth]} />
         <meshLambertMaterial color={roof.color} />
@@ -57,15 +54,14 @@ function Roof() {
           y: heightY + roof.dimensions.thickness,
           z: roof.position.y - roof.parapet.width / 2
         }
-        const parapetCenter = CoordinateTransformationService.edgeToCenter(
-          parapetEdgePos,
-          { width: roof.dimensions.width - roof.parapet.width, height: roof.parapet.height, depth: roof.parapet.width }
-        )
         return (
           <mesh 
             castShadow 
             receiveShadow 
-            position={CoordinateTransformationService.toThreeJsPosition(parapetCenter)}
+            position={CoordinateTransformationService.edgeToThreeJs(
+              parapetEdgePos,
+              { width: roof.dimensions.width - roof.parapet.width, height: roof.parapet.height, depth: roof.parapet.width }
+            )}
           >
             <boxGeometry args={[roof.dimensions.width - roof.parapet.width, roof.parapet.height, roof.parapet.width]} />
             <meshLambertMaterial color="#CCCCCC" />
@@ -80,15 +76,14 @@ function Roof() {
           y: heightY + roof.dimensions.thickness,
           z: roof.position.y + roof.dimensions.depth - roof.parapet.width
         }
-        const parapetCenter = CoordinateTransformationService.edgeToCenter(
-          parapetEdgePos,
-          { width: roof.dimensions.width - roof.parapet.width, height: roof.parapet.height, depth: roof.parapet.width }
-        )
         return (
           <mesh 
             castShadow 
             receiveShadow 
-            position={CoordinateTransformationService.toThreeJsPosition(parapetCenter)}
+            position={CoordinateTransformationService.edgeToThreeJs(
+              parapetEdgePos,
+              { width: roof.dimensions.width - roof.parapet.width, height: roof.parapet.height, depth: roof.parapet.width }
+            )}
           >
             <boxGeometry args={[roof.dimensions.width - roof.parapet.width, roof.parapet.height, roof.parapet.width]} />
             <meshLambertMaterial color="#CCCCCC" />
@@ -103,15 +98,14 @@ function Roof() {
           y: heightY + roof.dimensions.thickness,
           z: roof.position.y
         }
-        const parapetCenter = CoordinateTransformationService.edgeToCenter(
-          parapetEdgePos,
-          { width: roof.parapet.width, height: roof.parapet.height, depth: roof.dimensions.depth }
-        )
         return (
           <mesh 
             castShadow 
             receiveShadow 
-            position={CoordinateTransformationService.toThreeJsPosition(parapetCenter)}
+            position={CoordinateTransformationService.edgeToThreeJs(
+              parapetEdgePos,
+              { width: roof.parapet.width, height: roof.parapet.height, depth: roof.dimensions.depth }
+            )}
           >
             <boxGeometry args={[roof.parapet.width, roof.parapet.height, roof.dimensions.depth]} />
             <meshLambertMaterial color="#CCCCCC" />

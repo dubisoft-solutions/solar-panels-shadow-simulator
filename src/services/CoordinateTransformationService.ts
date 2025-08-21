@@ -135,4 +135,28 @@ export class CoordinateTransformationService {
       z: position[2]
     }
   }
+
+  /**
+   * Convenience method that combines edgeToCenter and toThreeJsPosition.
+   * Converts edge-based position directly to Three.js position array format.
+   * 
+   * @param edgePosition Position from edge (config format)
+   * @param dimensions Object dimensions
+   * @returns Three.js position array [x, y, z] ready for use
+   * 
+   * @example
+   * // Instead of:
+   * // const center = CoordinateTransformationService.edgeToCenter(edgePos, dims)
+   * // const position = CoordinateTransformationService.toThreeJsPosition(center)
+   * 
+   * // Use:
+   * const position = CoordinateTransformationService.edgeToThreeJs(edgePos, dims)
+   */
+  static edgeToThreeJs(
+    edgePosition: Position3D,
+    dimensions: Dimensions3D
+  ): [number, number, number] {
+    const centerPosition = this.edgeToCenter(edgePosition, dimensions)
+    return this.toThreeJsPosition(centerPosition)
+  }
 }
