@@ -3,6 +3,7 @@
 import * as THREE from 'three'
 import { useRef, useState, useEffect } from 'react'
 import { useThree, useFrame } from '@react-three/fiber'
+import { CoordinateTransformationService } from '@/services/CoordinateTransformationService'
 
 // Hyundai HiT-H450LE-FB Panel Specifications
 export const PANEL_SPECS = {
@@ -207,91 +208,51 @@ export function SolarPanel({ position = [0, 0, 0], rotation = [0, 0, 0] }: Solar
 }
 
 interface PlatformProps {
-  position?: [number, number, number]
-  connectorLength?: number
+  position?: [number, number, number] // center-based position, ready for Three.js
+  dimensions?: {
+    length: number
+    width: number
+    thickness: number
+  }
+  tiltAngle?: number
   includePanel?: boolean
 }
 
 export function Platform({ 
   position = [0, 0, 0], 
-  connectorLength = PLATFORM_SPECS.defaultConnectorLength,
+  dimensions = {
+    length: PANEL_SPECS.length,
+    width: PANEL_SPECS.width,
+    thickness: 0.05
+  },
+  tiltAngle = PLATFORM_SPECS.tiltAngle,
   includePanel = true 
 }: PlatformProps) {
   const platformRef = useRef<THREE.Group>(null)
-  const tiltRadians = -(PLATFORM_SPECS.tiltAngle * Math.PI) / 180  // -13 degrees (negative to face front)
-  
-  // Calculate platform dimensions based on panel and tilt
-  const platformLength = PANEL_SPECS.length + 0.1 // slightly larger than panel
-  const platformWidth = PANEL_SPECS.width + 0.1
-  const platformThickness = 0.05
+  const tiltRadians = -(tiltAngle * Math.PI) / 180  // negative to face front
   
   // Calculate height offset for tilted panel only
   const rearElevation = Math.sin(Math.abs(tiltRadians)) * PANEL_SPECS.width
   
   return (
     <group ref={platformRef} position={position}>
-      {/* Platform base - positioned from west/north edges */}
+      {/* Platform base - renders at group origin (parent handles positioning) */}
       <mesh 
         castShadow 
         receiveShadow 
-        position={[platformLength / 2, platformThickness / 2, platformWidth / 2]}
+        position={[0, 0, 0]}
       >
-        <boxGeometry args={[platformLength, platformThickness, platformWidth]} />
+        <boxGeometry args={[dimensions.length, dimensions.thickness, dimensions.width]} />
         <meshLambertMaterial color={VISUAL_SETTINGS.platformColor} />
       </mesh>
       
-      {/* Solar panel (if included) - front edge at front of platform, tilted upward */}
+      {/* Solar panel (if included) - positioned relative to platform center */}
       {includePanel && (
         <SolarPanel 
-          position={[PANEL_SPECS.length / 2, rearElevation / 2 + platformThickness / 2 + PANEL_SPECS.thickness / 2, (platformWidth - PANEL_SPECS.width) / 2]}
+          position={[0, dimensions.thickness / 2 + rearElevation / 2, 0]}
           rotation={[tiltRadians, 0, 0]}
         />
       )}
-    </group>
-  )
-}
-
-interface PlatformGridProps {
-  position?: [number, number, number]
-  rows?: number
-  columns?: number
-  connectorLength?: number
-  includeAllPanels?: boolean
-}
-
-export function PlatformGrid({ 
-  position = [0, 0, 0],
-  rows = 6,
-  columns = 1,
-  connectorLength = PLATFORM_SPECS.defaultConnectorLength,
-  includeAllPanels = true
-}: PlatformGridProps) {
-  const gridRef = useRef<THREE.Group>(null)
-  
-  const platforms = []
-  
-  for (let row = 0; row < rows; row++) {
-    for (let col = 0; col < columns; col++) {
-      // Calculate position for each platform
-      // X = east-west, Y = north-south, Z = height
-      const x = col * (PANEL_SPECS.length + 0.2) // spacing between columns (east-west)
-      const y = row * (PANEL_SPECS.width + connectorLength) // spacing between rows (north-south)
-      const z = 0 // all at same height level
-      
-      platforms.push(
-        <Platform
-          key={`platform-${row}-${col}`}
-          position={[x, y, z]}
-          connectorLength={connectorLength}
-          includePanel={includeAllPanels}
-        />
-      )
-    }
-  }
-  
-  return (
-    <group ref={gridRef} position={position}>
-      {platforms}
     </group>
   )
 }
@@ -309,7 +270,7 @@ export default function RoofSolarInstallation({
   configuration = { rows: 6, columns: 1, connectorLength: PLATFORM_SPECS.defaultConnectorLength }
 }: RoofSolarInstallationProps) {
   // This component will be placed inside the RoofObjects group, so it inherits the roof rotation
-  // Use roof coordinates directly - no conversion needed
+  // Use edge-based positioning with coordinate transformation service
   const panels = []
   
   const rows = configuration.rows || 6
@@ -319,26 +280,43 @@ export default function RoofSolarInstallation({
   // Calculate spacing using shadow simulation formulas
   const W = PANEL_SPECS.width  // Panel short side (tilt axis): 1.134 m
   const beta = PLATFORM_SPECS.tiltAngle * Math.PI / 180  // Tilt angle in radians: 13°
-  const H = W * Math.sin(beta)  // Rear-edge height: H = W·sinβ ≈ 0.255 m
   const D = W * Math.cos(beta)  // Projected panel depth on roof: D = W·cosβ ≈ 1.105 m
   const G = connectorLength - D  // Air gap: G = P - D (P is connector length)
   
   // Total spacing between panel centers = projected depth + air gap
   const panelSpacing = D + G
   
+  // Platform dimensions
+  const platformDimensions = {
+    width: PANEL_SPECS.length,  // Three.js X axis
+    height: 0.05,               // Platform thickness
+    depth: PANEL_SPECS.width    // Three.js Z axis
+  }
+  
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < columns; col++) {
-      // Position relative to installation origin
-      // First panel's front edge should be at z=0, so offset by half projected panel depth
-      const x = col * (PANEL_SPECS.length + 0.2)
-      const y = 0  
-      const z = row * panelSpacing + D / 2
+      // Edge-based position calculation (business logic)
+      const edgePosition = {
+        x: col * PANEL_SPECS.length,        // Distance from west edge
+        y: 0,                               // On roof surface
+        z: row * panelSpacing               // Distance from installation front edge
+      }
+      
+      // Transform to center-based position using service
+      const centerPosition = CoordinateTransformationService.edgeToCenter(
+        edgePosition,
+        platformDimensions
+      )
       
       panels.push(
         <Platform
           key={`panel-${row}-${col}`}
-          position={[x, y, z]}
-          connectorLength={connectorLength}
+          position={CoordinateTransformationService.toThreeJsPosition(centerPosition)}
+          dimensions={{
+            length: platformDimensions.width,
+            width: platformDimensions.depth,
+            thickness: platformDimensions.height
+          }}
           includePanel={true}
         />
       )
@@ -348,35 +326,60 @@ export default function RoofSolarInstallation({
   // Add connectors between platforms (2 connectors on the sides per gap)
   const connectors = []
   for (let i = 0; i < rows - 1; i++) {
-    // Position two connectors on the sides in the air gap between projected panel depths
+    // Calculate connector position in the air gap between panels
     const connectorStart = i * panelSpacing + D
-    const connectorEnd = (i + 1) * panelSpacing - D
+    const connectorEnd = (i + 1) * panelSpacing
     const connectorZ = (connectorStart + connectorEnd) / 2
-    const leftSideX = PANEL_SPECS.length * 0.3 // Position on left side
-    const rightSideX = PANEL_SPECS.length * 0.7 // Position on right side
     
-    // Left side connector
+    // Connector dimensions
+    const connectorDimensions = {
+      width: 0.08,   // X dimension
+      height: 0.03,  // Y dimension  
+      depth: G       // Z dimension (air gap)
+    }
+    
+    // Left side connector (20% from west edge)
+    const leftEdgePosition = {
+      x: PANEL_SPECS.length * 0.2 - connectorDimensions.width / 2,
+      y: 0,
+      z: connectorZ - connectorDimensions.depth / 2
+    }
+    const leftCenterPosition = CoordinateTransformationService.edgeToCenter(
+      leftEdgePosition,
+      connectorDimensions
+    )
+    
     connectors.push(
       <mesh
         key={`connector-${i}-left`}
         castShadow 
         receiveShadow 
-        position={[leftSideX, 0.01, connectorZ]}
+        position={CoordinateTransformationService.toThreeJsPosition(leftCenterPosition)}
       >
-        <boxGeometry args={[0.05, 0.02, G]} />
+        <boxGeometry args={[connectorDimensions.width, connectorDimensions.height, connectorDimensions.depth]} />
         <meshLambertMaterial color={VISUAL_SETTINGS.connectorColor} />
       </mesh>
     )
     
-    // Right side connector
+    // Right side connector (80% from west edge)
+    const rightEdgePosition = {
+      x: PANEL_SPECS.length * 0.8 - connectorDimensions.width / 2,
+      y: 0,
+      z: connectorZ - connectorDimensions.depth / 2
+    }
+    const rightCenterPosition = CoordinateTransformationService.edgeToCenter(
+      rightEdgePosition,
+      connectorDimensions
+    )
+    
     connectors.push(
       <mesh
         key={`connector-${i}-right`}
         castShadow 
         receiveShadow 
-        position={[rightSideX, 0.01, connectorZ]}
+        position={CoordinateTransformationService.toThreeJsPosition(rightCenterPosition)}
       >
-        <boxGeometry args={[0.05, 0.02, G]} />
+        <boxGeometry args={[connectorDimensions.width, connectorDimensions.height, connectorDimensions.depth]} />
         <meshLambertMaterial color={VISUAL_SETTINGS.connectorColor} />
       </mesh>
     )

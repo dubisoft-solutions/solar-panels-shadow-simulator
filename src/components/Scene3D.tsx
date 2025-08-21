@@ -5,6 +5,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { houseSettings } from '@/config/houseSettings'
 import RoofSolarInstallation from './SolarPanels'
+import { CoordinateTransformationService } from '@/services/CoordinateTransformationService'
 
 interface Scene3DProps {
   sunPosition: {
@@ -20,10 +21,22 @@ function Roof() {
   const rotationFromNorth = houseSettings.orientation.rotationFromNorth * Math.PI / 180
   const roof = houseSettings.roof
 
-  // Use wall-relative coordinates directly  
-  const roofX = roof.position.x + roof.dimensions.width / 2   
-  const roofZ = roof.position.y + roof.dimensions.depth / 2   
-  const roofY = heightY + roof.position.z + roof.dimensions.thickness / 2
+  // Edge-based position from config (business logic)
+  const roofEdgePosition = {
+    x: roof.position.x,
+    y: heightY + roof.position.z,  // house height + roof elevation
+    z: roof.position.y
+  }
+  
+  // Transform to center-based position using service
+  const roofCenterPosition = CoordinateTransformationService.edgeToCenter(
+    roofEdgePosition,
+    {
+      width: roof.dimensions.width,
+      height: roof.dimensions.thickness, 
+      depth: roof.dimensions.depth
+    }
+  )
 
   return (
     <group rotation={[0, rotationFromNorth, 0]} position={[-houseWidthX / 2, 0, -houseDepthZ / 2]}>
@@ -31,47 +44,80 @@ function Roof() {
       <mesh 
         castShadow 
         receiveShadow 
-        position={[roofX, roofY, roofZ]}
+        position={CoordinateTransformationService.toThreeJsPosition(roofCenterPosition)}
       >
         <boxGeometry args={[roof.dimensions.width, roof.dimensions.thickness, roof.dimensions.depth]} />
         <meshLambertMaterial color={roof.color} />
       </mesh>
 
       {/* North Parapet - shortened to avoid west corner overlap */}
-      {roof.parapet.sides.includes('north') && (
-        <mesh 
-          castShadow 
-          receiveShadow 
-          position={[roofX + roof.parapet.width / 2, heightY + roof.dimensions.thickness + roof.parapet.height / 2, roofZ - roof.dimensions.depth / 2 + roof.parapet.width / 2]}
-        >
-          <boxGeometry args={[roof.dimensions.width - roof.parapet.width, roof.parapet.height, roof.parapet.width]} />
-          <meshLambertMaterial color="#CCCCCC" />
-        </mesh>
-      )}
+      {roof.parapet.sides.includes('north') && (() => {
+        const parapetEdgePos = {
+          x: roof.position.x + roof.parapet.width / 2,
+          y: heightY + roof.dimensions.thickness,
+          z: roof.position.y - roof.parapet.width / 2
+        }
+        const parapetCenter = CoordinateTransformationService.edgeToCenter(
+          parapetEdgePos,
+          { width: roof.dimensions.width - roof.parapet.width, height: roof.parapet.height, depth: roof.parapet.width }
+        )
+        return (
+          <mesh 
+            castShadow 
+            receiveShadow 
+            position={CoordinateTransformationService.toThreeJsPosition(parapetCenter)}
+          >
+            <boxGeometry args={[roof.dimensions.width - roof.parapet.width, roof.parapet.height, roof.parapet.width]} />
+            <meshLambertMaterial color="#CCCCCC" />
+          </mesh>
+        )
+      })()}
       
       {/* South Parapet - shortened to avoid west corner overlap */}
-      {roof.parapet.sides.includes('south') && (
-        <mesh 
-          castShadow 
-          receiveShadow 
-          position={[roofX + roof.parapet.width / 2, heightY + roof.dimensions.thickness + roof.parapet.height / 2, roofZ + roof.dimensions.depth / 2 - roof.parapet.width / 2]}
-        >
-          <boxGeometry args={[roof.dimensions.width - roof.parapet.width, roof.parapet.height, roof.parapet.width]} />
-          <meshLambertMaterial color="#CCCCCC" />
-        </mesh>
-      )}
+      {roof.parapet.sides.includes('south') && (() => {
+        const parapetEdgePos = {
+          x: roof.position.x + roof.parapet.width / 2,
+          y: heightY + roof.dimensions.thickness,
+          z: roof.position.y + roof.dimensions.depth - roof.parapet.width
+        }
+        const parapetCenter = CoordinateTransformationService.edgeToCenter(
+          parapetEdgePos,
+          { width: roof.dimensions.width - roof.parapet.width, height: roof.parapet.height, depth: roof.parapet.width }
+        )
+        return (
+          <mesh 
+            castShadow 
+            receiveShadow 
+            position={CoordinateTransformationService.toThreeJsPosition(parapetCenter)}
+          >
+            <boxGeometry args={[roof.dimensions.width - roof.parapet.width, roof.parapet.height, roof.parapet.width]} />
+            <meshLambertMaterial color="#CCCCCC" />
+          </mesh>
+        )
+      })()}
       
       {/* West Parapet */}
-      {roof.parapet.sides.includes('west') && (
-        <mesh 
-          castShadow 
-          receiveShadow 
-          position={[roofX - roof.dimensions.width / 2 + roof.parapet.width / 2, heightY + roof.dimensions.thickness + roof.parapet.height / 2, roofZ]}
-        >
-          <boxGeometry args={[roof.parapet.width, roof.parapet.height, roof.dimensions.depth]} />
-          <meshLambertMaterial color="#CCCCCC" />
-        </mesh>
-      )}
+      {roof.parapet.sides.includes('west') && (() => {
+        const parapetEdgePos = {
+          x: roof.position.x,
+          y: heightY + roof.dimensions.thickness,
+          z: roof.position.y
+        }
+        const parapetCenter = CoordinateTransformationService.edgeToCenter(
+          parapetEdgePos,
+          { width: roof.parapet.width, height: roof.parapet.height, depth: roof.dimensions.depth }
+        )
+        return (
+          <mesh 
+            castShadow 
+            receiveShadow 
+            position={CoordinateTransformationService.toThreeJsPosition(parapetCenter)}
+          >
+            <boxGeometry args={[roof.parapet.width, roof.parapet.height, roof.dimensions.depth]} />
+            <meshLambertMaterial color="#CCCCCC" />
+          </mesh>
+        )
+      })()}
       
       {/* Roof Objects - now nested inside roof coordinate system */}
       <RoofObjects />
@@ -86,11 +132,22 @@ function RoofObjects() {
   return (
     <>
       {houseSettings.roofObjects.map((obj) => {
-        // Now using roof-relative coordinates - RoofObjects inherits roof's positioning/rotation
-        // X=0 is west edge of roof, Z=0 is north edge of roof
-        const x = obj.position.x   // distance from roof west edge
-        const z = obj.position.z   // distance from roof north edge  
-        const y = houseHeight + roofThickness + obj.position.y + obj.dimensions.height / 2  // house height + above roof surface + elevation + half object height
+        // Edge-based position from config (business logic)
+        const edgePosition = {
+          x: obj.position.x,  // distance from roof west edge
+          y: houseHeight + roofThickness + obj.position.y, // house height + above roof surface + elevation
+          z: obj.position.z   // distance from roof north edge
+        }
+        
+        // Transform to center-based position using service
+        const centerPosition = CoordinateTransformationService.edgeToCenter(
+          edgePosition,
+          {
+            width: obj.dimensions.width,
+            height: obj.dimensions.height,
+            depth: obj.dimensions.depth
+          }
+        )
 
         return (
           <group key={obj.id}>
@@ -98,7 +155,7 @@ function RoofObjects() {
             <mesh 
               castShadow 
               receiveShadow
-              position={[x, y, z]}
+              position={CoordinateTransformationService.toThreeJsPosition(centerPosition)}
             >
               <boxGeometry args={[obj.dimensions.width, obj.dimensions.height, obj.dimensions.depth]} />
               <meshLambertMaterial color={obj.color || '#8B4513'} />
@@ -106,39 +163,60 @@ function RoofObjects() {
             
             {/* Chimney pipe if present */}
             {obj.pipe && (
-              <mesh 
-                castShadow 
-                receiveShadow
-                position={[
-                  x + obj.pipe.position.x, 
-                  y + obj.dimensions.height / 2 + obj.pipe.position.y + obj.pipe.height / 2, 
-                  z + obj.pipe.position.z
-                ]}
-              >
-                <cylinderGeometry args={[obj.pipe.diameter / 2, obj.pipe.diameter / 2, obj.pipe.height]} />
-                <meshLambertMaterial color={obj.pipe.color || '#333333'} />
-              </mesh>
+              (() => {
+                // Calculate pipe position relative to chimney center
+                const pipeEdgePosition = {
+                  x: edgePosition.x + obj.pipe.position.x,
+                  y: edgePosition.y + obj.dimensions.height + obj.pipe.position.y,
+                  z: edgePosition.z + obj.pipe.position.z
+                }
+                
+                const pipeCenterPosition = CoordinateTransformationService.edgeToCenter(
+                  pipeEdgePosition,
+                  {
+                    width: obj.pipe.diameter,
+                    height: obj.pipe.height,
+                    depth: obj.pipe.diameter
+                  }
+                )
+                
+                return (
+                  <mesh 
+                    castShadow 
+                    receiveShadow
+                    position={CoordinateTransformationService.toThreeJsPosition(pipeCenterPosition)}
+                  >
+                    <cylinderGeometry args={[obj.pipe.diameter / 2, obj.pipe.diameter / 2, obj.pipe.height]} />
+                    <meshLambertMaterial color={obj.pipe.color || '#333333'} />
+                  </mesh>
+                )
+              })()
             )}
           </group>
         )
       })}
       
-      {/* Solar Panel Installation - now roof-relative coordinates */}
-      <group 
-        position={[
-          0.1 + 0.15,  // 10cm from west parapet (15cm parapet + 10cm gap)
-          houseHeight + roofThickness,  // house height + on roof surface
-          houseSettings.roof.position.y + houseSettings.roof.dimensions.depth   // at actual south edge
-        ]}
-      >
-        <RoofSolarInstallation 
-          configuration={{
-            rows: 6,
-            columns: 1,
-            connectorLength: 1.320
-          }}
-        />
-      </group>
+      {/* Solar Panel Installation - using service layer for positioning */}
+      {(() => {
+        // Edge-based position calculation (business logic)
+        const installationEdgePosition = {
+          x: 0.1 + 0.15,  // 10cm from west parapet (15cm parapet + 10cm gap)
+          y: houseHeight + roofThickness,  // house height + on roof surface  
+          z: houseSettings.roof.position.y + houseSettings.roof.dimensions.depth   // at actual south edge
+        }
+        
+        return (
+          <group position={CoordinateTransformationService.toThreeJsPosition(installationEdgePosition)}>
+            <RoofSolarInstallation 
+              configuration={{
+                rows: 6,
+                columns: 1,
+                connectorLength: 1.320
+              }}
+            />
+          </group>
+        )
+      })()}
     </>
   )
 }
