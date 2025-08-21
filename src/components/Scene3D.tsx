@@ -122,6 +122,8 @@ function Roof() {
 function RoofObjects() {
   const roofThickness = houseSettings.roof.dimensions.thickness
   const houseHeight = houseSettings.dimensions.height
+  const houseWidth = houseSettings.dimensions.northSideLength
+  const houseDepth = houseSettings.dimensions.westSideLength
 
   return (
     <>
@@ -190,7 +192,7 @@ function RoofObjects() {
         )
       })}
       
-      {/* Solar Panel Installation - using service layer for positioning */}
+      {/* SE Solar Panel Installation - using service layer for positioning */}
       {(() => {
         // Edge-based position calculation (business logic)
         const installationEdgePosition = {
@@ -208,6 +210,57 @@ function RoofObjects() {
               configuration={{
                 rows: 6,
                 columns: 1,
+                connectorLength: 1.320
+              }}
+            />
+          </group>
+        )
+      })()}
+      
+      {/* SW 1 Solar Panel Installation - along north parapet, facing west */}
+      {(() => {
+        // Edge-based position calculation for SW installation
+        const swInstallationEdgePosition = {
+          x: houseWidth - 1.320 * 2,  // 10cm from west parapet (15cm parapet + 10cm gap)
+          y: houseHeight + roofThickness,  // house height + on roof surface
+          z: 0.15 + PANEL_SPECS.length  // 10cm from north parapet (15cm parapet + 10cm gap)
+        }
+        
+        return (
+          <group 
+            position={CoordinateTransformationService.toThreeJsPosition(swInstallationEdgePosition)}
+            rotation={[0, Math.PI / 2, 0]}
+          >
+            <RoofSolarInstallation 
+              configuration={{
+                rows: 2,  // 2 panels in a row
+                columns: 1,
+                connectorLength: 1.320
+              }}
+            />
+          </group>
+        )
+      })()}
+
+
+      {/* SW 2 Solar Panel Installation - along north parapet, facing west */}
+      {(() => {
+        // Edge-based position calculation for SW installation
+        const swInstallationEdgePosition = {
+          x: houseWidth - 1.320 * 2,  // 10cm from west parapet (15cm parapet + 10cm gap)
+          y: houseHeight + roofThickness,  // house height + on roof surface
+          z: houseDepth + 0.15  // 10cm from north parapet (15cm parapet + 10cm gap)
+        }
+        
+        return (
+          <group 
+            position={CoordinateTransformationService.toThreeJsPosition(swInstallationEdgePosition)}
+            rotation={[0, Math.PI / 2, 0]}
+          >
+            <RoofSolarInstallation 
+              configuration={{
+                rows: 2,  // 2 panels in a row
+                columns: 2,
                 connectorLength: 1.320
               }}
             />
