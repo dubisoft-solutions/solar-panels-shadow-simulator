@@ -249,7 +249,7 @@ export function Platform({
       {/* Solar panel (if included) - positioned relative to platform center */}
       {includePanel && (
         <SolarPanel 
-          position={[0, dimensions.thickness / 2 + rearElevation / 2, 0]}
+          position={[0, dimensions.thickness / 2 + rearElevation / 2 + PANEL_SPECS.thickness / 2, 0]}
           rotation={[tiltRadians, 0, 0]}
         />
       )}
@@ -321,7 +321,9 @@ export default function RoofSolarInstallation({
   const connectors = []
   for (let i = 0; i < rows - 1; i++) {
     // Calculate connector position in the air gap between panels
-    const connectorZ = (i + 0.5) * panelSpacing + D / 2
+    const connectorStart = i * panelSpacing + D
+    const connectorEnd = (i + 1) * panelSpacing
+    const connectorZ = (connectorStart + connectorEnd) / 2
     
     // Connector dimensions
     const connectorDimensions = {
