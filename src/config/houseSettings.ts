@@ -68,10 +68,13 @@ export interface HouseSettings {
   roofObjects: RoofObject[]
 }
 
+const HOUSE_DEPTH = 8.71
+const HOUSE_WIDTH = 5.6
+
 export const houseSettings: HouseSettings = {
   dimensions: {
-    westSideLength: 8.71,   // meters - longest side (7.99 + 0.36*2 for walls)
-    northSideLength: 5.82,  // meters - shorter side (5.1 + 0.36*2 for walls)
+    westSideLength: HOUSE_DEPTH,   // meters - longest side (7.99 + 0.36*2 for walls)
+    northSideLength: HOUSE_WIDTH,  // meters - shorter side 
     height: 3.0             // meters
   },
   roof: {
@@ -81,8 +84,8 @@ export const houseSettings: HouseSettings = {
       z: 0                  // on top of house
     },
     dimensions: {
-      width: 5.82,          // same as house width (east-west)
-      depth: 9.21,          // house depth + 50cm extension (8.71 + 0.5)
+      width: HOUSE_WIDTH,          // same as house width (east-west)
+      depth: HOUSE_DEPTH + 0.5,          // house depth + 50cm extension (8.71 + 0.5)
       thickness: 0.2        // 20cm thick roof
     },
     parapet: {
@@ -110,8 +113,8 @@ export const houseSettings: HouseSettings = {
       id: 'chimney-1',
       type: 'chimney',
       position: {
-        x: 2.91,  // center of house (5.82m / 2)
-        z: 4.36,  // center of house (8.71m / 2)
+        x: HOUSE_WIDTH / 2,  // center of house
+        z: HOUSE_DEPTH / 2,  // center of house
         y: 0      // on roof level
       },
       dimensions: {

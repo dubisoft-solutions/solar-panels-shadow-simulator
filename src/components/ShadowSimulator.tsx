@@ -26,6 +26,7 @@ export default function ShadowSimulator() {
   })
   const [sunPosition, setSunPosition] = useState<SunPosition>({ azimuth: 180, elevation: 45 })
   const [connectorLength, setConnectorLength] = useState(1.320)
+  const [layout, setLayout] = useState<'current' | 'sw-reposition' | 'sw-portrait'>('current')
 
   const calculateSunPosition = (date: Date, timeHours: number): SunPosition => {
     // Create a new date with the specified time
@@ -71,7 +72,7 @@ export default function ShadowSimulator() {
           minDistance={5}
           maxDistance={50}
         />
-        <Scene3D sunPosition={sunPosition} connectorLength={connectorLength} />
+        <Scene3D sunPosition={sunPosition} connectorLength={connectorLength} layout={layout} />
       </Canvas>
       
       <Controls
@@ -79,9 +80,11 @@ export default function ShadowSimulator() {
         time={time}
         sunPosition={sunPosition}
         connectorLength={connectorLength}
+        layout={layout}
         onDateChange={setDate}
         onTimeChange={setTime}
         onConnectorLengthChange={setConnectorLength}
+        onLayoutChange={setLayout}
       />
     </div>
   )

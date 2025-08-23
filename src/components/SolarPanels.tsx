@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import { useRef, useState, useEffect } from 'react'
 import { useThree, useFrame } from '@react-three/fiber'
 import { CoordinateTransformationService } from '@/services/CoordinateTransformationService'
+import { PanelSpacingService, type PanelOrientation } from '@/services/PanelSpacingService'
 
 // Hyundai HiT-H450LE-FB Panel Specifications
 export const PANEL_SPECS = {
@@ -249,7 +250,7 @@ export function Platform({
       {/* Solar panel (if included) - positioned relative to platform center */}
       {includePanel && (
         <SolarPanel 
-          position={[0, dimensions.thickness / 2 + rearElevation / 2 + PANEL_SPECS.thickness / 2, 0]}
+          position={[0, dimensions.thickness / 2 + rearElevation / 2 + PANEL_SPECS.thickness / 2, - PANEL_SPECS.thickness / 2]}
           rotation={[tiltRadians, 0, 0]}
         />
       )}
@@ -277,14 +278,17 @@ export default function RoofSolarInstallation({
   const columns = configuration.columns || 1
   const connectorLength = configuration.connectorLength || PLATFORM_SPECS.defaultConnectorLength
   
-  // Calculate spacing - total row pitch should be exactly connectorLength (1320mm)
-  const W = PANEL_SPECS.width  // Panel short side (tilt axis): 1.134 m
-  const beta = PLATFORM_SPECS.tiltAngle * Math.PI / 180  // Tilt angle in radians: 13°
-  const D = W * Math.cos(beta)  // Projected panel depth on roof: D = W·cosβ ≈ 1.105 m
-  const G = connectorLength - D  // Air gap: G = connectorLength - projected depth
+  // Calculate spacing using the PanelSpacingService
+  // For now using landscape orientation - will be configurable later
+  const spacing = PanelSpacingService.calculateSpacing(
+    PANEL_SPECS, 
+    PLATFORM_SPECS, 
+    connectorLength, 
+    'landscape'
+  )
   
   // Total spacing between panel centers = exactly connectorLength (1320mm)
-  const panelSpacing = connectorLength
+  const panelSpacing = spacing.rowSpacing
   
   // Platform dimensions
   const platformDimensions = {
@@ -321,7 +325,7 @@ export default function RoofSolarInstallation({
   const connectors = []
   for (let i = 0; i < rows - 1; i++) {
     // Calculate connector position in the air gap between panels
-    const connectorStart = i * panelSpacing + D
+    const connectorStart = i * panelSpacing + spacing.projectedDepth
     const connectorEnd = (i + 1) * panelSpacing
     const connectorZ = (connectorStart + connectorEnd) / 2
     
@@ -329,7 +333,7 @@ export default function RoofSolarInstallation({
     const connectorDimensions = {
       width: 0.08,   // X dimension
       height: 0.03,  // Y dimension  
-      depth: G       // Z dimension (air gap)
+      depth: spacing.airGap       // Z dimension (air gap)
     }
     
     // Left side connector (20% from west edge)

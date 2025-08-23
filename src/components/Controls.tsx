@@ -11,12 +11,14 @@ interface ControlsProps {
     elevation: number
   }
   connectorLength: number
+  layout: 'current' | 'sw-reposition' | 'sw-portrait'
   onDateChange: (date: Date) => void
   onTimeChange: (time: number) => void
   onConnectorLengthChange: (length: number) => void
+  onLayoutChange: (layout: 'current' | 'sw-reposition' | 'sw-portrait') => void
 }
 
-export default function Controls({ date, time, sunPosition, connectorLength, onDateChange, onTimeChange, onConnectorLengthChange }: ControlsProps) {
+export default function Controls({ date, time, sunPosition, connectorLength, layout, onDateChange, onTimeChange, onConnectorLengthChange, onLayoutChange }: ControlsProps) {
   const [isExpanded, setIsExpanded] = useState(true)
   const displayDimensions = getDisplayDimensions(houseSettings)
 
@@ -125,21 +127,43 @@ export default function Controls({ date, time, sunPosition, connectorLength, onD
 
           <div className="bg-green-50 p-3 rounded-md">
             <h3 className="text-sm font-medium text-gray-700 mb-2">Solar Panel Configuration</h3>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Connector Length
-              </label>
-              <select
-                value={connectorLength}
-                onChange={(e) => onConnectorLengthChange(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-              >
-                <option value={1.320}>1320mm (Default)</option>
-                <option value={1.500}>1500mm</option>
-              </select>
-              <p className="text-xs text-gray-500 mt-1">
-                Row pitch: {(connectorLength * 1000).toFixed(0)}mm between panel centers
-              </p>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Connector Length
+                </label>
+                <select
+                  value={connectorLength}
+                  onChange={(e) => onConnectorLengthChange(Number(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                >
+                  <option value={1.320}>1320mm (Default)</option>
+                  <option value={1.500}>1500mm</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Row pitch: {(connectorLength * 1000).toFixed(0)}mm between panel centers
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Layout
+                </label>
+                <select
+                  value={layout}
+                  onChange={(e) => onLayoutChange(e.target.value as 'current' | 'sw-reposition' | 'sw-portrait')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                >
+                  <option value="current">Current</option>
+                  <option value="sw-reposition">SW Reposition</option>
+                  <option value="sw-portrait">SW Portrait</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  {layout === 'current' && 'Current layout with all panels'}
+                  {layout === 'sw-reposition' && 'SW panels will be repositioned (coming soon)'}
+                  {layout === 'sw-portrait' && 'SW panels in portrait orientation (coming soon)'}
+                </p>
+              </div>
             </div>
           </div>
 
