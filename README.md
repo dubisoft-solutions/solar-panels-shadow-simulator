@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Solar Panel Shadow Simulator
+
+A 3D interactive solar panel shadow simulator built with Next.js, React Three Fiber, and Three.js. This application visualizes solar panel installations on rooftops and simulates realistic shadows based on accurate sun position calculations.
+
+## Features
+
+- **Real-time 3D visualization** of solar panels and shadows
+- **Accurate sun positioning** using SunCalc library with GPS coordinates
+- **Multiple installation layouts** (landscape, portrait, repositioned)
+- **Interactive controls** for date, time, and configuration parameters
+- **Configurable panel spacing** with adjustable connector lengths
+- **Shadow analysis** for different times of day and seasons
 
 ## Getting Started
 
-First, run the development server:
+Install dependencies and run the development server:
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the simulator.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Configuration
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The simulator uses configuration files in `/src/config/`:
 
-## Learn More
+- `houseSettings.ts` - House dimensions, GPS location, roof specifications
+- `solarPanelInstallationSettings.ts` - Panel dimensions, platform specs, visual settings
+- `simulatorSettings.ts` - Default date/time settings
 
-To learn more about Next.js, take a look at the following resources:
+## Available Scripts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `npm run dev` - Start development server with Turbopack
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Architecture
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The application follows a modular architecture with separate services for coordinate transformation and panel spacing calculations. The 3D scene is rendered using React Three Fiber with real-time shadow casting and camera controls.
