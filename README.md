@@ -37,6 +37,20 @@ The simulator uses configuration files in `/src/config/`:
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
 
+## Deployment
+
+This project is configured for deployment to GitHub Pages:
+
+1. **Automatic Deployment**: Push to main/master branch triggers automatic deployment via GitHub Actions
+2. **Manual Deployment**: Use the "Actions" tab in your GitHub repository to manually trigger deployment
+3. **Local Build**: Run `npm run build` to generate static files in the `out/` directory
+
+### Setup GitHub Pages
+
+1. Go to your repository Settings → Pages
+2. Set Source to "GitHub Actions"
+3. The site will be available at `https://yourusername.github.io/shadow-simulator`
+
 ## Architecture
 
 The application follows a modular architecture with separate services for coordinate transformation and panel spacing calculations. The 3D scene is rendered using React Three Fiber with real-time shadow casting and camera controls.
