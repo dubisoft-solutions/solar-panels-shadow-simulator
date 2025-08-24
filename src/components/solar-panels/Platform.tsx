@@ -44,7 +44,7 @@ export function Platform({
       
       {includePanel && (
         <SolarPanel 
-          position={[0, dimensions.thickness / 2 + rearElevation / 2 + PANEL_SPECS.thickness / 2, - PANEL_SPECS.thickness / 2]}
+          position={[0, dimensions.thickness / 2 + rearElevation / 2 + PANEL_SPECS.thickness / 2, -(PANEL_SPECS.width / 2) + (dimensions.width / 2)]}
           rotation={[tiltRadians, 0, 0]}
         />
       )}
