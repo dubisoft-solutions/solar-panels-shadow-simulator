@@ -4,6 +4,7 @@ import { useRef } from 'react'
 import * as THREE from 'three'
 import { SolarPanel } from './SolarPanel'
 import { PANEL_SPECS, LANDSCAPE_PLATFORM_SPECS, VISUAL_SETTINGS } from '@/config/solarPanelInstallationSettings'
+import { PanelOrientation, PanelSpacingService } from '@/services/PanelSpacingService'
 
 interface PlatformProps {
   position?: [number, number, number]
@@ -13,6 +14,7 @@ interface PlatformProps {
     thickness: number
   }
   tiltAngle?: number
+  orientation?: PanelOrientation
   includePanel?: boolean
 }
 
@@ -24,13 +26,15 @@ export function Platform({
     thickness: 0.05
   },
   tiltAngle = LANDSCAPE_PLATFORM_SPECS.tiltAngle,
+  orientation = 'landscape',
   includePanel = true 
 }: PlatformProps) {
   const platformRef = useRef<THREE.Group>(null)
   const tiltRadians = -(tiltAngle * Math.PI) / 180
   
-  const rearElevation = Math.sin(Math.abs(tiltRadians)) * PANEL_SPECS.width
-  
+  const panelDimensions = PanelSpacingService.getPanelDimensions(PANEL_SPECS, orientation)
+
+  const rearElevation = Math.sin(Math.abs(tiltRadians)) * panelDimensions.width
   return (
     <group ref={platformRef} position={position}>
       <mesh 
@@ -44,8 +48,9 @@ export function Platform({
       
       {includePanel && (
         <SolarPanel 
-          position={[0, dimensions.thickness / 2 + rearElevation / 2 + PANEL_SPECS.thickness / 2, -(PANEL_SPECS.width / 2) + (dimensions.width / 2)]}
+          position={[0, dimensions.thickness / 2 + rearElevation / 2 + panelDimensions.thickness / 2, -(panelDimensions.width / 2) + (dimensions.width / 2)]}
           rotation={[tiltRadians, 0, 0]}
+          orientation={orientation}
         />
       )}
     </group>

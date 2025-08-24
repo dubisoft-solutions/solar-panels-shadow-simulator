@@ -113,8 +113,8 @@ export const houseSettings: HouseSettings = {
       id: 'chimney-1',
       type: 'chimney',
       position: {
-        x: HOUSE_WIDTH / 2,  // center of house
-        z: HOUSE_DEPTH / 2,  // center of house
+        x: (HOUSE_WIDTH - 2.963) + 0.05,  // 2.263m from east side + pipe radius
+        z: 4.699 + 0.05,                  // 4.699m from north side + pipe radius
         y: 0      // on roof level
       },
       dimensions: {
@@ -126,9 +126,9 @@ export const houseSettings: HouseSettings = {
         diameter: 0.1,  // 10cm
         height: 0.3,    // 30cm
         position: {
-          x: 0.1,  // 10cm from west side of chimney base
-          y: 0,    // on top of chimney
-          z: 0.1  // center of chimney (north-south): chimney depth/2 - pipe diameter = 0.5m/2 - 0.1/2 = 0.2m
+          x: 0,  // center of chimney (east-west)
+          y: 0,  // on top of chimney
+          z: 0   // center of chimney (north-south)
         },
         color: '#767373'
       },

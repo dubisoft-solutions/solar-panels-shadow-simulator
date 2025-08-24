@@ -113,4 +113,13 @@ export class PanelSpacingService {
       description: `${orientation === 'portrait' ? 'Portrait' : 'Landscape'} mode: Panel projected depth ${Math.round(spacing.projectedDepth * 1000)}mm, Air gap ${Math.round(spacing.airGap * 1000)}mm`
     }
   }
+
+  /**
+   * Get panel dimensions based on orientation
+   */
+  static getPanelDimensions(panelSpecs: PanelSpecs, orientation: PanelOrientation): { length: number; width: number; thickness: number } {
+    return orientation === 'landscape'
+      ? { length: panelSpecs.length, width: panelSpecs.width, thickness: panelSpecs.thickness }
+      : { length: panelSpecs.width, width: panelSpecs.length, thickness: panelSpecs.thickness }
+  }
 }

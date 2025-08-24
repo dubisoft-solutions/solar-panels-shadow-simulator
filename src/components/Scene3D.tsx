@@ -5,7 +5,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { houseSettings } from '@/config/houseSettings'
 import RoofSolarInstallation from './solar-panels/RoofSolarInstallation'
-import { PANEL_SPECS, LANDSCAPE_PLATFORM_SPECS } from '@/config/solarPanelInstallationSettings'
+import { PANEL_SPECS, LANDSCAPE_PLATFORM_SPECS, PORTRAIT_PLATFORM_SPECS } from '@/config/solarPanelInstallationSettings'
 import { CoordinateTransformationService } from '@/services/CoordinateTransformationService'
 import { PanelSpacingService } from '@/services/PanelSpacingService'
 
@@ -283,7 +283,7 @@ function RoofObjects({ connectorLength, layout }: { connectorLength: number; lay
         )
       })()}
 
-      {/* SW 2 Solar Panel Installation - along north parapet, facing west */}
+      {/* SW 2 Solar Panel Installation - along south parapet, facing west */}
       {(layout === 'current' || layout === 'sw-reposition') && (() => {
         const spacing = PanelSpacingService.calculateSpacing(
           PANEL_SPECS,
@@ -308,6 +308,72 @@ function RoofObjects({ connectorLength, layout }: { connectorLength: number; lay
                 rows: 2,  // 2 panels in a row
                 columns: 2,
                 connectorLength: connectorLength
+              }}
+            />
+          </group>
+        )
+      })()}
+
+
+      {/* SW 1 Solar Panel Installation in portrait mode - along north parapet, facing west */}
+      {layout === 'sw-portrait' && (() => {
+        const spacing = PanelSpacingService.calculateSpacing(
+          PANEL_SPECS,
+          PORTRAIT_PLATFORM_SPECS,
+          connectorLength,
+          'portrait'  // Will be configurable for portrait mode later
+        )
+        // Edge-based position calculation for SW installation
+        const swInstallationEdgePosition = {
+          x: houseWidth - spacing.projectedDepth - 0.05,  // panels positioned based on connector length
+          y: houseHeight + roofThickness,  // house height + on roof surface
+          z: 0.15 + PANEL_SPECS.length * 2 + 0.1  // 10cm from north parapet (15cm parapet + 10cm gap)
+        }
+        
+        return (
+          <group 
+            position={CoordinateTransformationService.toThreeJsPosition(swInstallationEdgePosition)}
+            rotation={[0, Math.PI / 2, 0]}
+          >
+            <RoofSolarInstallation 
+              configuration={{
+                rows: 1,
+                columns: 3,
+                connectorLength: connectorLength,
+                orientation: 'portrait'
+              }}
+            />
+          </group>
+        )
+      })()}
+
+
+      {/* SW 2 Solar Panel Installation in portrait mode - along south parapet, facing west */}
+      {(layout === 'sw-portrait') && (() => {
+        const spacing = PanelSpacingService.calculateSpacing(
+          PANEL_SPECS,
+          PORTRAIT_PLATFORM_SPECS,
+          connectorLength,
+          'portrait'  // Will be configurable for portrait mode later
+        )
+        // Edge-based position calculation for SW installation
+        const swInstallationEdgePosition = {
+          x: houseWidth - spacing.platformLength,
+          y: houseHeight + roofThickness,  // house height + on roof surface
+          z: houseDepth + 0.15  // 10cm from north parapet (15cm parapet + 10cm gap)
+        }
+        
+        return (
+          <group 
+            position={CoordinateTransformationService.toThreeJsPosition(swInstallationEdgePosition)}
+            rotation={[0, Math.PI / 2, 0]}
+          >
+            <RoofSolarInstallation 
+              configuration={{
+                rows: 1,  // 1 panel in a row
+                columns: 3,
+                connectorLength: connectorLength,
+                orientation: 'portrait'
               }}
             />
           </group>

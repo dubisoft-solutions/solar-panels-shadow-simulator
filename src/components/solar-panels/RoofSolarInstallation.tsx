@@ -32,15 +32,15 @@ export default function RoofSolarInstallation({
   )
   
   const platformDimensions = {
-    width: PANEL_SPECS.length,
-    height: 0.05,
-    depth: PANEL_SPECS.width
+    width: spacing.singleColWidth,
+    height: spacing.platformThickness,
+    depth: spacing.projectedDepth
   }
   
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < columns; col++) {
       const edgePosition = {
-        x: col * PANEL_SPECS.length,
+        x: col * spacing.singleColWidth,
         y: 0,
         z: row * spacing.rowSpacing
       }
@@ -54,6 +54,7 @@ export default function RoofSolarInstallation({
             width: platformDimensions.depth,
             thickness: platformDimensions.height
           }}
+          orientation={orientation}
           includePanel={true}
         />
       )
