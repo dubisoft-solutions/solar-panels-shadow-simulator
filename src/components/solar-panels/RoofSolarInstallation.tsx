@@ -2,7 +2,7 @@
 
 import { Platform } from './Platform'
 import { CoordinateTransformationService } from '@/services/CoordinateTransformationService'
-import { PanelSpacingService } from '@/services/PanelSpacingService'
+import { PanelOrientation, PanelSpacingService } from '@/services/PanelSpacingService'
 import { PANEL_SPECS, LANDSCAPE_PLATFORM_SPECS, VISUAL_SETTINGS } from '@/config/solarPanelInstallationSettings'
 
 interface RoofSolarInstallationProps {
@@ -10,26 +10,26 @@ interface RoofSolarInstallationProps {
     rows?: number
     columns?: number
     connectorLength?: number
+    orientation?: PanelOrientation
   }
 }
 
 export default function RoofSolarInstallation({ 
-  configuration = { rows: 6, columns: 1, connectorLength: LANDSCAPE_PLATFORM_SPECS.defaultConnectorLength }
+  configuration = { rows: 6, columns: 1, connectorLength: LANDSCAPE_PLATFORM_SPECS.defaultConnectorLength, orientation: 'landscape' },
 }: RoofSolarInstallationProps) {
   const panels = []
   
   const rows = configuration.rows || 6
   const columns = configuration.columns || 1
   const connectorLength = configuration.connectorLength || LANDSCAPE_PLATFORM_SPECS.defaultConnectorLength
-  
+  const orientation = configuration.orientation || 'landscape'
+
   const spacing = PanelSpacingService.calculateSpacing(
     PANEL_SPECS, 
     LANDSCAPE_PLATFORM_SPECS, 
     connectorLength, 
-    'landscape'
+    orientation
   )
-  
-  const panelSpacing = spacing.rowSpacing
   
   const platformDimensions = {
     width: PANEL_SPECS.length,
@@ -42,7 +42,7 @@ export default function RoofSolarInstallation({
       const edgePosition = {
         x: col * PANEL_SPECS.length,
         y: 0,
-        z: row * panelSpacing
+        z: row * spacing.rowSpacing
       }
       
       panels.push(
@@ -62,18 +62,18 @@ export default function RoofSolarInstallation({
   
   const connectors = []
   for (let i = 0; i < rows - 1; i++) {
-    const connectorStart = i * panelSpacing + spacing.projectedDepth
-    const connectorEnd = (i + 1) * panelSpacing
+    const connectorStart = i * spacing.rowSpacing + spacing.platformLength
+    const connectorEnd = (i + 1) * spacing.rowSpacing
     const connectorZ = (connectorStart + connectorEnd) / 2
     
     const connectorDimensions = {
       width: 0.08,
-      height: 0.03,
+      height: spacing.platformThickness,
       depth: spacing.airGap
     }
     
     const leftEdgePosition = {
-      x: PANEL_SPECS.length * 0.2 - connectorDimensions.width / 2,
+      x: 0,
       y: 0,
       z: connectorZ - connectorDimensions.depth / 2
     }
@@ -90,7 +90,7 @@ export default function RoofSolarInstallation({
     )
     
     const rightEdgePosition = {
-      x: PANEL_SPECS.length * 0.8 - connectorDimensions.width / 2,
+      x: spacing.singleColWidth * columns - connectorDimensions.width,
       y: 0,
       z: connectorZ - connectorDimensions.depth / 2
     }

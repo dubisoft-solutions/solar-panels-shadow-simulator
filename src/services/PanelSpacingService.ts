@@ -6,6 +6,8 @@ export interface PanelSpecs {
 
 export interface PlatformSpecs {
   tiltAngle: number // Tilt angle in degrees
+  length: number    // Platform length (m)
+  thickness: number // Platform thickness (m)
 }
 
 export type PanelOrientation = 'landscape' | 'portrait'
@@ -15,6 +17,9 @@ export interface SpacingCalculation {
   airGap: number           // G: Air gap between panels (m)
   rowSpacing: number       // Total spacing between panel centers (m)
   tiltAxisDimension: number // The dimension used as tilt axis
+  platformLength: number   // Platform length (m)
+  singleColWidth: number   // Width of a single column (m)
+  platformThickness: number // Thickness of the platform (m)
 }
 
 export class PanelSpacingService {
@@ -74,7 +79,10 @@ export class PanelSpacingService {
       projectedDepth,
       airGap,
       rowSpacing: connectorLength,  // Total spacing between panel centers
-      tiltAxisDimension
+      platformLength: platformSpecs.length,
+      tiltAxisDimension,
+      singleColWidth: orientation === 'landscape' ? panelSpecs.length : panelSpecs.width,
+      platformThickness: platformSpecs.thickness
     }
   }
 
