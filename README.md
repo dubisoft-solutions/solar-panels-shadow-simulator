@@ -49,12 +49,12 @@ This project is configured for deployment to GitHub Pages:
 
 1. Go to your repository Settings → Pages
 2. Set Source to "GitHub Actions"
-3. The site will be available at `https://yourusername.github.io/shadow-simulator`
+3. The site will be available at `https://yourusername.github.io/solar-panels-shadow-simulator`
 
 ### Troubleshooting
 
 If the app doesn't load resources:
-- Ensure your repository name matches the `basePath` in `next.config.ts` (currently set to `/shadow-simulator`)
+- Ensure your repository name matches the `basePath` in `next.config.ts` (currently set to `/solar-panels-shadow-simulator`)
 - If you use a different repository name, update the `basePath` and `assetPrefix` in `next.config.ts`
 - Check that GitHub Actions deployment completed successfully
 - The `.nojekyll` file is included to prevent GitHub Pages from ignoring `_next` folder

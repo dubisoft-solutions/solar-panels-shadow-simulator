@@ -9,8 +9,8 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true
   },
-  basePath: isProd && isGithubPages ? '/shadow-simulator' : '',
-  assetPrefix: isProd && isGithubPages ? '/shadow-simulator/' : '',
+  basePath: isProd && isGithubPages ? '/solar-panels-shadow-simulator' : '',
+  assetPrefix: isProd && isGithubPages ? '/solar-panels-shadow-simulator/' : '',
 };
 
 export default nextConfig;
