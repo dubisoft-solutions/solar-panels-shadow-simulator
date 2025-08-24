@@ -51,6 +51,14 @@ This project is configured for deployment to GitHub Pages:
 2. Set Source to "GitHub Actions"
 3. The site will be available at `https://yourusername.github.io/shadow-simulator`
 
+### Troubleshooting
+
+If the app doesn't load resources:
+- Ensure your repository name matches the `basePath` in `next.config.ts` (currently set to `/shadow-simulator`)
+- If you use a different repository name, update the `basePath` and `assetPrefix` in `next.config.ts`
+- Check that GitHub Actions deployment completed successfully
+- The `.nojekyll` file is included to prevent GitHub Pages from ignoring `_next` folder
+
 ## Architecture
 
 The application follows a modular architecture with separate services for coordinate transformation and panel spacing calculations. The 3D scene is rendered using React Three Fiber with real-time shadow casting and camera controls.
