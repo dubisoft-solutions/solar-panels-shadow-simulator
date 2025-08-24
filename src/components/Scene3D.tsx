@@ -4,7 +4,8 @@ import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { houseSettings } from '@/config/houseSettings'
-import RoofSolarInstallation, { PANEL_SPECS, PLATFORM_SPECS } from './SolarPanels'
+import RoofSolarInstallation from './solar-panels/RoofSolarInstallation'
+import { PANEL_SPECS, LANDSCAPE_PLATFORM_SPECS } from '@/config/solarPanelInstallationSettings'
 import { CoordinateTransformationService } from '@/services/CoordinateTransformationService'
 import { PanelSpacingService } from '@/services/PanelSpacingService'
 
@@ -224,7 +225,7 @@ function RoofObjects({ connectorLength, layout }: { connectorLength: number; lay
       {layout === 'current' && (() => {
         const spacing = PanelSpacingService.calculateSpacing(
           PANEL_SPECS,
-          PLATFORM_SPECS,
+          LANDSCAPE_PLATFORM_SPECS,
           connectorLength,
           'landscape'  // Will be configurable for portrait mode later
         )
@@ -255,7 +256,7 @@ function RoofObjects({ connectorLength, layout }: { connectorLength: number; lay
       {layout === 'sw-reposition' && (() => {
         const spacing = PanelSpacingService.calculateSpacing(
           PANEL_SPECS,
-          PLATFORM_SPECS,
+          LANDSCAPE_PLATFORM_SPECS,
           connectorLength,
           'landscape'  // Will be configurable for portrait mode later
         )
@@ -286,7 +287,7 @@ function RoofObjects({ connectorLength, layout }: { connectorLength: number; lay
       {(layout === 'current' || layout === 'sw-reposition') && (() => {
         const spacing = PanelSpacingService.calculateSpacing(
           PANEL_SPECS,
-          PLATFORM_SPECS,
+          LANDSCAPE_PLATFORM_SPECS,
           connectorLength,
           'landscape'  // Will be configurable for portrait mode later
         )
