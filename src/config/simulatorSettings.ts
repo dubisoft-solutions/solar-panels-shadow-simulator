@@ -7,7 +7,7 @@ export interface SimulatorSettings {
 
 export const simulatorSettings: SimulatorSettings = {
   defaultDateTime: {
-    date: '2024-08-11',
+    date: '2025-08-11',
     time: 16.9  // 16:54
   }
 }

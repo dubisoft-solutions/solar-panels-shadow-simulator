@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import * as SunCalc from 'suncalc'
+import { fromZonedTime } from 'date-fns-tz'
 import Scene3D from './Scene3D'
 import Controls from './Controls'
 import { houseSettings } from '@/config/houseSettings'
@@ -28,13 +29,24 @@ export default function ShadowSimulator() {
   const [layout, setLayout] = useState<'current' | 'sw-reposition' | 'sw-portrait'>('current')
 
   const calculateSunPosition = (date: Date, timeHours: number): SunPosition => {
-    // Create a new date with the specified time
-    const dateWithTime = new Date(date)
-    dateWithTime.setHours(Math.floor(timeHours), (timeHours % 1) * 60, 0, 0)
+    // Create a date that represents the specified time in Netherlands timezone
+    // This ensures consistent sun calculations regardless of the user's local timezone
+    const year = date.getFullYear()
+    const month = date.getMonth()
+    const day = date.getDate()
+    const hours = Math.floor(timeHours)
+    const minutes = Math.floor((timeHours % 1) * 60)
     
-    // Use SunCalc to get accurate sun position
+    // Create a date object with the specified time, treating it as Netherlands local time
+    const nlLocalTime = new Date(year, month, day, hours, minutes, 0)
+    
+    // Convert Netherlands local time to UTC using date-fns-tz
+    // This automatically handles DST transitions
+    const utcTime = fromZonedTime(nlLocalTime, houseSettings.location.timezone)
+    
+    // Use SunCalc to get accurate sun position for Netherlands location
     const sunPosition = SunCalc.getPosition(
-      dateWithTime,
+      utcTime,
       houseSettings.location.latitude,
       houseSettings.location.longitude
     )
