@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import * as SunCalc from 'suncalc'
-import { fromZonedTime } from 'date-fns-tz'
+import { fromZonedTime, toZonedTime } from 'date-fns-tz'
 import Scene3D from './Scene3D'
 import Controls from './Controls'
 import { houseSettings } from '@/config/houseSettings'
@@ -27,6 +27,42 @@ export default function ShadowSimulator() {
   const [sunPosition, setSunPosition] = useState<SunPosition>({ azimuth: 180, elevation: 45 })
   const [connectorLength, setConnectorLength] = useState(1.320)
   const [layout, setLayout] = useState<'current' | 'sw-reposition' | 'sw-portrait'>('current')
+  const [followNowTime, setFollowNowTime] = useState(false)
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  const getCurrentNetherlandsTime = useCallback(() => {
+    const now = new Date()
+    const nlTime = toZonedTime(now, houseSettings.location.timezone)
+    const hours = nlTime.getHours() + nlTime.getMinutes() / 60
+    return { date: nlTime, time: hours }
+  }, [])
+
+  const updateToCurrentTime = useCallback(() => {
+    const current = getCurrentNetherlandsTime()
+    setDate(current.date)
+    setTime(current.time)
+  }, [getCurrentNetherlandsTime])
+
+  const handleDateChange = (newDate: Date) => {
+    setDate(newDate)
+    if (followNowTime) {
+      setFollowNowTime(false)
+    }
+  }
+
+  const handleTimeChange = (newTime: number) => {
+    setTime(newTime)
+    if (followNowTime) {
+      setFollowNowTime(false)
+    }
+  }
+
+  const handleFollowNowTimeChange = (follow: boolean) => {
+    setFollowNowTime(follow)
+    if (follow) {
+      updateToCurrentTime()
+    }
+  }
 
   const calculateSunPosition = (date: Date, timeHours: number): SunPosition => {
     // Create a date that represents the specified time in Netherlands timezone
@@ -63,6 +99,33 @@ export default function ShadowSimulator() {
     setSunPosition(newSunPosition)
   }, [date, time])
 
+  // Handle follow now time interval
+  useEffect(() => {
+    if (followNowTime) {
+      // Update immediately when starting to follow
+      updateToCurrentTime()
+      
+      // Set up interval to update every minute
+      intervalRef.current = setInterval(() => {
+        updateToCurrentTime()
+      }, 60000) // 60,000ms = 1 minute
+    } else {
+      // Clear interval when not following
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
+    }
+
+    // Cleanup interval on unmount
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
+    }
+  }, [followNowTime, updateToCurrentTime])
+
   return (
     <div className="h-screen w-screen relative">
       <Canvas
@@ -92,10 +155,12 @@ export default function ShadowSimulator() {
         sunPosition={sunPosition}
         connectorLength={connectorLength}
         layout={layout}
-        onDateChange={setDate}
-        onTimeChange={setTime}
+        followNowTime={followNowTime}
+        onDateChange={handleDateChange}
+        onTimeChange={handleTimeChange}
         onConnectorLengthChange={setConnectorLength}
         onLayoutChange={setLayout}
+        onFollowNowTimeChange={handleFollowNowTimeChange}
       />
     </div>
   )

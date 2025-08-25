@@ -12,13 +12,15 @@ interface ControlsProps {
   }
   connectorLength: number
   layout: 'current' | 'sw-reposition' | 'sw-portrait'
+  followNowTime: boolean
   onDateChange: (date: Date) => void
   onTimeChange: (time: number) => void
   onConnectorLengthChange: (length: number) => void
   onLayoutChange: (layout: 'current' | 'sw-reposition' | 'sw-portrait') => void
+  onFollowNowTimeChange: (follow: boolean) => void
 }
 
-export default function Controls({ date, time, sunPosition, connectorLength, layout, onDateChange, onTimeChange, onConnectorLengthChange, onLayoutChange }: ControlsProps) {
+export default function Controls({ date, time, sunPosition, connectorLength, layout, followNowTime, onDateChange, onTimeChange, onConnectorLengthChange, onLayoutChange, onFollowNowTimeChange }: ControlsProps) {
   const [isExpanded, setIsExpanded] = useState(true)
   const displayDimensions = getDisplayDimensions(houseSettings)
 
@@ -90,6 +92,26 @@ export default function Controls({ date, time, sunPosition, connectorLength, lay
               <span>18:00</span>
               <span>22:00</span>
             </div>
+          </div>
+
+          <div className="bg-blue-50 p-3 rounded-md">
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="followNowTime"
+                checked={followNowTime}
+                onChange={(e) => onFollowNowTimeChange(e.target.checked)}
+                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+              />
+              <label htmlFor="followNowTime" className="text-sm font-medium text-gray-700">
+                Follow now time (Netherlands)
+              </label>
+            </div>
+            {followNowTime && (
+              <p className="text-xs text-gray-500 mt-2">
+                Time updates automatically every minute
+              </p>
+            )}
           </div>
 
           <div className="bg-gray-50 p-3 rounded-md">
