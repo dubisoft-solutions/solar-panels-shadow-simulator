@@ -96,7 +96,7 @@ export const houseSettings: HouseSettings = {
     color: '#FFFFFF'        // white color for better shadow visibility
   },
   orientation: {
-    rotationFromNorth: 30   // degrees clockwise from true north
+    rotationFromNorth: 30.5   // degrees clockwise from true north
   },
   location: {
     latitude: 51.9553,      // Culemborg, Netherlands
@@ -114,7 +114,7 @@ export const houseSettings: HouseSettings = {
       type: 'chimney',
       position: {
         x: (HOUSE_WIDTH - 2.963) + 0.05,  // 2.263m from east side + pipe radius
-        z: 4.699 + 0.05,                  // 4.699m from north side + pipe radius
+        z: 4.499 + 0.05,                  // 4.699m from north side + pipe radius
         y: 0      // on roof level
       },
       dimensions: {
