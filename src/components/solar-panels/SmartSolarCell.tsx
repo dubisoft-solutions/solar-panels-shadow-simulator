@@ -164,9 +164,6 @@ export function SmartSolarCell({ position, geometry, baseColor, cellId, debugRay
           
           const intensity = shadowedPoints / samplePoints.length
           
-          // Debug logging to track the issue
-          console.log(`Cell ${cellId}: frame=${frameCount.current}, intensity=${intensity.toFixed(3)}, light=(${lightWorldPos.x.toFixed(1)},${lightWorldPos.y.toFixed(1)},${lightWorldPos.z.toFixed(1)})`)
-          
           setShadowIntensity(intensity)
         } else {
           setShadowIntensity(0)
