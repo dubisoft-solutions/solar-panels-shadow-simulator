@@ -38,15 +38,15 @@ export function SmartSolarCell({ position, geometry, baseColor, cellId, debugRay
     if (frameCount.current % 30 !== 0) return
     
     if (meshRef.current) {
-      let directionalLight: THREE.DirectionalLight | null = null
+      let sunLight: THREE.DirectionalLight | null = null
       scene.traverse((child) => {
-        if (child instanceof THREE.DirectionalLight) {
-          directionalLight = child
+        if (child instanceof THREE.DirectionalLight && child.name === 'sun-light') {
+          sunLight = child
         }
       })
       
-      if (directionalLight) {
-        const light = directionalLight as THREE.DirectionalLight
+      if (sunLight) {
+        const light = sunLight as THREE.DirectionalLight
         if (light.intensity > 0) {
           const worldPos = new THREE.Vector3()
           meshRef.current!.getWorldPosition(worldPos)

@@ -467,22 +467,34 @@ function Compass() {
 
 export default function Scene3D({ sunPosition, connectorLength = 1.320, layout = 'current' }: Scene3DProps) {
   const lightRef = useRef<THREE.DirectionalLight>(null)
+  const sunLightRef = useRef<THREE.DirectionalLight>(null)
 
   useFrame(() => {
+    const azimuthRad = sunPosition.azimuth * Math.PI / 180
+    const elevationRad = sunPosition.elevation * Math.PI / 180
+    
+    // Update visual light (close distance for proper shadows)
     if (lightRef.current) {
-      // Human perspective from above: North=up, East=right, West=left
-      // So: North=-Z, East=+X, South=+Z, West=-X
-      const azimuthRad = sunPosition.azimuth * Math.PI / 180
-      const elevationRad = sunPosition.elevation * Math.PI / 180
-      
       const distance = 50
-      const x = distance * Math.cos(elevationRad) * Math.sin(azimuthRad) // East is RIGHT (positive X)
-      const y = distance * Math.sin(elevationRad) // Up-Down
-      const z = -distance * Math.cos(elevationRad) * Math.cos(azimuthRad) // North is UP (negative Z)
+      const x = distance * Math.cos(elevationRad) * Math.sin(azimuthRad)
+      const y = distance * Math.sin(elevationRad)
+      const z = -distance * Math.cos(elevationRad) * Math.cos(azimuthRad)
       
       lightRef.current.position.set(x, y, z)
       lightRef.current.target.position.set(0, 0, 0)
       lightRef.current.target.updateMatrixWorld()
+    }
+    
+    // Update sun light (far distance for SmartSolarCell calculations)
+    if (sunLightRef.current) {
+      const sunDistance = 1000 // Very far away for parallel rays
+      const x = sunDistance * Math.cos(elevationRad) * Math.sin(azimuthRad)
+      const y = sunDistance * Math.sin(elevationRad)
+      const z = -sunDistance * Math.cos(elevationRad) * Math.cos(azimuthRad)
+      
+      sunLightRef.current.position.set(x, y, z)
+      sunLightRef.current.target.position.set(0, 0, 0)
+      sunLightRef.current.target.updateMatrixWorld()
     }
   })
 
@@ -502,6 +514,14 @@ export default function Scene3D({ sunPosition, connectorLength = 1.320, layout =
         shadow-camera-top={15}
         shadow-camera-bottom={-15}
         shadow-camera-near={0.1}
+      />
+      
+      {/* Far sun light for SmartSolarCell calculations (no shadows, no visual impact) */}
+      <directionalLight
+        ref={sunLightRef}
+        intensity={sunPosition.elevation > 0 ? 0.0001 : 0.0}  // Very low intensity to avoid visual impact
+        castShadow={false}  // No shadow casting
+        name="sun-light"  // Name for SmartSolarCell to identify
       />
       
       <Ground />
