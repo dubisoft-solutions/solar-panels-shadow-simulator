@@ -15,9 +15,9 @@ interface SmartSolarCellProps {
 function getShadowColor(shadowIntensity: number, baseColor: string): string {
   if (shadowIntensity === 0) return baseColor
   if (shadowIntensity <= 0.25) return '#FFFF00' // 1/4 points - bright yellow
-  if (shadowIntensity <= 0.5) return '#faa63fff' // 2/4 points - dark orange  
+  if (shadowIntensity <= 0.5) return '#faa63f' // 2/4 points - dark orange  
   if (shadowIntensity <= 0.75) return '#d9913a' // 3/4 points - deep pink
-  if (shadowIntensity <= 0.95) return '#b59267ff' // 4/4 points - blue violet
+  if (shadowIntensity <= 0.95) return '#b59267' // 4/4 points - blue violet
   return '#000000' // 5/5 points - black
 }
 
@@ -163,6 +163,9 @@ export function SmartSolarCell({ position, geometry, baseColor, cellId, debugRay
           }
           
           const intensity = shadowedPoints / samplePoints.length
+          
+          // Debug logging to track the issue
+          console.log(`Cell ${cellId}: frame=${frameCount.current}, intensity=${intensity.toFixed(3)}, light=(${lightWorldPos.x.toFixed(1)},${lightWorldPos.y.toFixed(1)},${lightWorldPos.z.toFixed(1)})`)
           
           setShadowIntensity(intensity)
         } else {
