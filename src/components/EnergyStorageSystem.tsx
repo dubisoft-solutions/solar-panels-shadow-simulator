@@ -1,46 +1,59 @@
 'use client'
 
-import React from 'react'
+import React, { useMemo } from 'react'
 import * as THREE from 'three'
 import { houseSettings } from '@/config/houseSettings'
-import { CoordinateTransformationService } from '@/services/CoordinateTransformationService'
+
+// Create a simple canvas with text and return as texture
+function createTextTexture(text: string): THREE.Texture {
+  const canvas = document.createElement('canvas')
+  canvas.width = 400
+  canvas.height = 100
+  const ctx = canvas.getContext('2d')!
+  
+  // Red background
+  ctx.fillStyle = '#cdb9b9'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  
+  // Text
+  ctx.fillStyle = '#393333'
+  ctx.font = 'bold 32px Arial'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText(text, canvas.width / 2, canvas.height / 2)
+  
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.needsUpdate = true
+  texture.flipY = true
+  return texture
+}
 
 interface WallMountProps {
   position: [number, number, number]
   width: number
   height: number
+  depth: number
+  blockZPosition: number // Position for mounting blocks relative to wall mount center
 }
 
-function WallMount({ position, width, height }: WallMountProps) {
+function WallMount({ position, width, height, depth, blockZPosition }: WallMountProps) {
   return (
     <group position={position}>
-      {/* Wall mounting bracket - flat against wall */}
-      <mesh castShadow receiveShadow position={[0, 0, -0.002]}>
-        <boxGeometry args={[width + 0.1, height, 0.004]} />
-        <meshLambertMaterial color="#2C2C2C" />
-      </mesh>
-      
-      {/* Left support rail */}
-      <mesh castShadow receiveShadow position={[-width/2 + 0.02, 0, 0.015]}>
-        <boxGeometry args={[0.04, height, 0.025]} />
+      {/* Four small corner mounting blocks */}
+      <mesh castShadow receiveShadow position={[-width/2 + 0.025, height/2 - 0.025, blockZPosition]}>
+        <boxGeometry args={[0.05, 0.05, depth]} />
         <meshLambertMaterial color="#404040" />
       </mesh>
-      
-      {/* Right support rail */}
-      <mesh castShadow receiveShadow position={[width/2 - 0.02, 0, 0.015]}>
-        <boxGeometry args={[0.04, height, 0.025]} />
+      <mesh castShadow receiveShadow position={[width/2 - 0.025, height/2 - 0.025, blockZPosition]}>
+        <boxGeometry args={[0.05, 0.05, depth]} />
         <meshLambertMaterial color="#404040" />
       </mesh>
-      
-      {/* Top support rail */}
-      <mesh castShadow receiveShadow position={[0, height/2 - 0.015, 0.015]}>
-        <boxGeometry args={[width - 0.08, 0.03, 0.025]} />
+      <mesh castShadow receiveShadow position={[-width/2 + 0.025, -height/2 + 0.025, blockZPosition]}>
+        <boxGeometry args={[0.05, 0.05, depth]} />
         <meshLambertMaterial color="#404040" />
       </mesh>
-      
-      {/* Bottom support rail */}
-      <mesh castShadow receiveShadow position={[0, -height/2 + 0.015, 0.015]}>
-        <boxGeometry args={[width - 0.08, 0.03, 0.025]} />
+      <mesh castShadow receiveShadow position={[width/2 - 0.025, -height/2 + 0.025, blockZPosition]}>
+        <boxGeometry args={[0.05, 0.05, depth]} />
         <meshLambertMaterial color="#404040" />
       </mesh>
     </group>
@@ -52,16 +65,24 @@ interface BatteryUnitProps {
   unitNumber: number
 }
 
-function BatteryUnit({ position, unitNumber }: BatteryUnitProps) {
+function BatteryUnit({ position }: BatteryUnitProps) {
   const { battery, mounting } = houseSettings.energyStorage
+  
+  // Create text texture using canvas
+  const labelTexture = useMemo(() => createTextTexture('SMILE-G3-BAT-3.8S'), [])
+  
+  // Calculate mounting block position: from wall mount center to equipment back face
+  const blockZPosition = mounting.wallOffset/2 + battery.dimensions.depth/2
   
   return (
     <group position={position}>
       {/* Wall mount system */}
       <WallMount 
-        position={[0, 0, -mounting.wallOffset/2]} 
+        position={[0, 0, 0]} 
         width={battery.dimensions.width}
         height={battery.dimensions.height}
+        depth={mounting.wallOffset}
+        blockZPosition={blockZPosition}
       />
       
       {/* Battery unit */}
@@ -69,29 +90,19 @@ function BatteryUnit({ position, unitNumber }: BatteryUnitProps) {
         <boxGeometry args={[
           battery.dimensions.width, 
           battery.dimensions.height, 
-          0.260  // Total depth including mounting: 260mm
+          battery.dimensions.depth  // Use actual battery depth from settings
         ]} />
         <meshLambertMaterial color={battery.color} />
       </mesh>
       
-      {/* Battery label background */}
-      <mesh position={[0, 0, -(battery.dimensions.depth + mounting.wallOffset)/2 - 0.002]}>
-        <boxGeometry args={[0.35, 0.08, 0.004]} />
-        <meshLambertMaterial color="#FFFFFF" />
+      {/* Battery label with actual text - on back face (toward wall) */}
+      <mesh position={[0, 0, -battery.dimensions.depth/2 - 0.001]} rotation={[0, Math.PI, 0]}>
+        <planeGeometry args={[0.3, 0.075]} />
+        <meshBasicMaterial map={labelTexture} />
       </mesh>
       
-      {/* Battery model text - temporarily disabled */}
-      <mesh position={[0, 0.01, -(battery.dimensions.depth + mounting.wallOffset)/2 - 0.003]}>
-        <boxGeometry args={[0.25, 0.015, 0.005]} />
-        <meshLambertMaterial color="#333333" />
-      </mesh>
-      <mesh position={[0, -0.02, -(battery.dimensions.depth + mounting.wallOffset)/2 - 0.003]}>
-        <boxGeometry args={[0.2, 0.012, 0.005]} />
-        <meshLambertMaterial color="#666666" />
-      </mesh>
-      
-      {/* LED indicator - on the right side */}
-      <mesh position={[-battery.dimensions.width/2 + 0.03, battery.dimensions.height/2 - 0.03, -(battery.dimensions.depth + mounting.wallOffset)/2 - 0.002]}>
+      {/* LED indicator - on back face, top right */}
+      <mesh position={[battery.dimensions.width/2 - 0.03, battery.dimensions.height/2 - 0.03, -battery.dimensions.depth/2 - 0.001]}>
         <boxGeometry args={[0.02, 0.02, 0.004]} />
         <meshLambertMaterial color="#00FF00" />
       </mesh>
@@ -106,13 +117,21 @@ interface InverterUnitProps {
 function InverterUnit({ position }: InverterUnitProps) {
   const { inverter, mounting } = houseSettings.energyStorage
   
+  // Create text texture using canvas
+  const logoTexture = useMemo(() => createTextTexture('AlphaESS SMILE-G3'), [])
+  
+  // Calculate mounting block position: from wall mount center to equipment back face
+  const blockZPosition = mounting.wallOffset/2 + inverter.dimensions.depth/2
+  
   return (
     <group position={position}>
       {/* Wall mount system */}
       <WallMount 
-        position={[0, 0, -mounting.wallOffset/2]} 
+        position={[0, 0, 0]} 
         width={inverter.dimensions.width}
         height={inverter.dimensions.height}
+        depth={mounting.wallOffset}
+        blockZPosition={blockZPosition}
       />
       
       {/* Inverter unit */}
@@ -120,27 +139,21 @@ function InverterUnit({ position }: InverterUnitProps) {
         <boxGeometry args={[
           inverter.dimensions.width, 
           inverter.dimensions.height, 
-          0.260  // Total depth including mounting: 260mm
+          inverter.dimensions.depth  // Use actual inverter depth from settings
         ]} />
         <meshLambertMaterial color={inverter.color} />
       </mesh>
       
-      {/* Inverter display/panel */}
-      <mesh position={[0, 0.05, -(inverter.dimensions.depth + mounting.wallOffset)/2 - 0.002]}>
+      {/* Inverter display/panel - on back face (toward wall) */}
+      <mesh position={[0, 0.05, -inverter.dimensions.depth/2 - 0.001]}>
         <boxGeometry args={[0.25, 0.15, 0.004]} />
         <meshLambertMaterial color="#000000" />
       </mesh>
       
-      {/* AlphaEss logo area */}
-      <mesh position={[0, -0.08, -(inverter.dimensions.depth + mounting.wallOffset)/2 - 0.003]}>
-        <boxGeometry args={[0.35, 0.06, 0.005]} />
-        <meshLambertMaterial color="#FF6600" />
-      </mesh>
-      
-      {/* AlphaEss logo text - temporarily disabled */}
-      <mesh position={[0, -0.08, -(inverter.dimensions.depth + mounting.wallOffset)/2 - 0.004]}>
-        <boxGeometry args={[0.25, 0.015, 0.005]} />
-        <meshLambertMaterial color="#FFFFFF" />
+      {/* AlphaEss logo - on back face (toward wall) */}
+      <mesh position={[0, -0.08, -inverter.dimensions.depth/2 - 0.001]} rotation={[0, Math.PI, 0]}>
+        <planeGeometry args={[0.35, 0.08]} />
+        <meshBasicMaterial map={logoTexture} />
       </mesh>
     </group>
   )
@@ -160,7 +173,7 @@ export default function EnergyStorageSystem() {
     const batteryPosition: [number, number, number] = [
       position.x + battery.dimensions.width / 2,
       currentY,
-      position.z + (battery.dimensions.depth + mounting.wallOffset) / 2  // Total depth from wall surface
+      position.z - (battery.dimensions.depth + mounting.wallOffset) / 2  // Total depth from wall surface
     ]
     
     units.push(
@@ -180,7 +193,7 @@ export default function EnergyStorageSystem() {
   const inverterPosition: [number, number, number] = [
     position.x + inverter.dimensions.width / 2,
     currentY - (battery.dimensions.height / 2) + (inverter.dimensions.height / 2),
-    position.z + (inverter.dimensions.depth + mounting.wallOffset) / 2  // Total depth from wall surface
+    position.z - (inverter.dimensions.depth + mounting.wallOffset) / 2
   ]
   
   units.push(

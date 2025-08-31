@@ -49,7 +49,7 @@ export interface EnergyStorageSystem {
   position: {
     x: number // meters from west wall
     y: number // meters above ground
-    z: number // meters from north wall (negative = south of north wall)
+    z: number // meters from north wall (0 = at north wall, positive = south of north wall)
   }
   batteryCount: number
   inverter: {
@@ -102,6 +102,10 @@ export interface HouseSettings {
 
 const HOUSE_DEPTH = 8.71
 const HOUSE_WIDTH = 5.6
+
+const ENERGY_STORAGE_UNIT_WIDTH = 0.61
+const ENERGY_STORAGE_UNIT_DEPTH = 0.212
+const ENERGY_STORAGE_UNIT_WALL_OFFSET = 0.048
 
 export const houseSettings: HouseSettings = {
   dimensions: {
@@ -169,9 +173,9 @@ export const houseSettings: HouseSettings = {
   ],
   energyStorage: {
     position: {
-      x: HOUSE_WIDTH - 0.61 - 0.25,    // 25cm from east wall (total width - equipment width - margin)
+      x: HOUSE_WIDTH - ENERGY_STORAGE_UNIT_WIDTH - 0.25,    // 25cm from east wall (total width - equipment width - margin)
       y: 0.30,    // 30cm above ground
-      z: -0.13    // 13cm south of north wall (negative = outside/south of house)
+      z: 0        // at the north wall surface
     },
     batteryCount: 2,
     inverter: {
@@ -179,7 +183,7 @@ export const houseSettings: HouseSettings = {
       dimensions: {
         width: 0.610,   // 610mm
         height: 0.366,  // 366mm  
-        depth: 0.212    // 212mm (equipment only, mounting adds space)
+        depth: 0.212    // 212mm equipment depth
       },
       color: '#D3D3D3'  // light gray
     },
@@ -188,12 +192,12 @@ export const houseSettings: HouseSettings = {
       dimensions: {
         width: 0.610,   // 610mm
         height: 0.435,  // 435mm
-        depth: 0.212    // 212mm (equipment only, mounting adds space)
+        depth: 0.212    // 212mm equipment depth
       },
       color: '#F5F5F5'  // white
     },
     mounting: {
-      wallOffset: 0.048,  // 48mm space for mounting system (260mm total - 212mm equipment)
+      wallOffset: ENERGY_STORAGE_UNIT_WALL_OFFSET,
       unitSpacing: 0.001  // 1mm gap between units for minimal visual separation
     }
   }
