@@ -45,6 +45,37 @@ export interface RoofSettings {
   color: string
 }
 
+export interface EnergyStorageSystem {
+  position: {
+    x: number // meters from west wall
+    y: number // meters above ground
+    z: number // meters from north wall (negative = south of north wall)
+  }
+  batteryCount: number
+  inverter: {
+    model: string
+    dimensions: {
+      width: number  // meters
+      height: number // meters
+      depth: number  // meters
+    }
+    color: string
+  }
+  battery: {
+    model: string
+    dimensions: {
+      width: number  // meters
+      height: number // meters
+      depth: number  // meters
+    }
+    color: string
+  }
+  mounting: {
+    wallOffset: number // meters - space between wall and equipment for mounting system
+    unitSpacing: number // meters - vertical gap between units
+  }
+}
+
 export interface HouseSettings {
   dimensions: {
     westSideLength: number    // Longest side facing west
@@ -66,6 +97,7 @@ export interface HouseSettings {
     units: 'meters' | 'feet'
   }
   roofObjects: RoofObject[]
+  energyStorage: EnergyStorageSystem
 }
 
 const HOUSE_DEPTH = 8.71
@@ -134,7 +166,37 @@ export const houseSettings: HouseSettings = {
       },
       color: '#232220'
     }
-  ]
+  ],
+  energyStorage: {
+    position: {
+      x: HOUSE_WIDTH - 0.61 - 0.25,    // 25cm from east wall (total width - equipment width - margin)
+      y: 0.30,    // 30cm above ground
+      z: -0.13    // 13cm south of north wall (negative = outside/south of house)
+    },
+    batteryCount: 2,
+    inverter: {
+      model: 'AlphaEss Smile G3 S5',
+      dimensions: {
+        width: 0.610,   // 610mm
+        height: 0.366,  // 366mm  
+        depth: 0.212    // 212mm (equipment only, mounting adds space)
+      },
+      color: '#D3D3D3'  // light gray
+    },
+    battery: {
+      model: 'SMILE-G3-BAT-3.8S',
+      dimensions: {
+        width: 0.610,   // 610mm
+        height: 0.435,  // 435mm
+        depth: 0.212    // 212mm (equipment only, mounting adds space)
+      },
+      color: '#F5F5F5'  // white
+    },
+    mounting: {
+      wallOffset: 0.048,  // 48mm space for mounting system (260mm total - 212mm equipment)
+      unitSpacing: 0.001  // 1mm gap between units for minimal visual separation
+    }
+  }
 }
 
 export const getDisplayDimensions = (settings: HouseSettings) => {

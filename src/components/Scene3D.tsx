@@ -5,6 +5,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { houseSettings } from '@/config/houseSettings'
 import RoofSolarInstallation from './solar-panels/RoofSolarInstallation'
+import EnergyStorageSystem from './EnergyStorageSystem'
 import { PANEL_SPECS, LANDSCAPE_PLATFORM_SPECS, PORTRAIT_PLATFORM_SPECS } from '@/config/solarPanelInstallationSettings'
 import { CoordinateTransformationService } from '@/services/CoordinateTransformationService'
 import { PanelSpacingService } from '@/services/PanelSpacingService'
@@ -56,7 +57,7 @@ function Roof({ connectorLength, layout }: { connectorLength: number; layout: 'c
         const parapetEdgePos = {
           x: roof.position.x + roof.parapet.width / 2,
           y: heightY + roof.dimensions.thickness,
-          z: roof.position.y - roof.parapet.width / 2
+          z: roof.position.y
         }
         return (
           <mesh 
@@ -233,7 +234,7 @@ function RoofObjects({ connectorLength, layout }: { connectorLength: number; lay
         const swInstallationEdgePosition = {
           x: houseWidth - connectorLength - spacing.projectedDepth - 0.05,  // panels positioned based on connector length
           y: houseHeight + roofThickness,  // house height + on roof surface
-          z: 0.15 + PANEL_SPECS.length  // 10cm from north parapet (15cm parapet + 10cm gap)
+          z: 0.15 + PANEL_SPECS.length  // closed to north parapet (15cm parapet)
         }
         
         return (
@@ -420,6 +421,9 @@ function House() {
         <sphereGeometry args={[0.03]} />
         <meshLambertMaterial color="#FFD700" />
       </mesh>
+      
+      {/* Energy Storage System on north wall */}
+      <EnergyStorageSystem />
       
       {/* <mesh castShadow position={[0, houseHeight + 0.5, 0]}>
         <coneGeometry args={[Math.max(houseWidth, houseDepth) * 0.7, 1, 4]} />
