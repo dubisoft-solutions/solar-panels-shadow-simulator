@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import * as THREE from 'three'
 import { houseSettings } from '@/config/houseSettings'
 import { CoordinateTransformationService } from '@/services/CoordinateTransformationService'
@@ -73,15 +74,25 @@ function BatteryUnit({ position, unitNumber }: BatteryUnitProps) {
         <meshLambertMaterial color={battery.color} />
       </mesh>
       
-      {/* Battery label/branding */}
-      <mesh position={[0, 0, 0.130 + 0.001]}>
-        <boxGeometry args={[0.3, 0.1, 0.002]} />
-        <meshLambertMaterial color="#333333" />
+      {/* Battery label background */}
+      <mesh position={[0, 0, -(battery.dimensions.depth + mounting.wallOffset)/2 - 0.002]}>
+        <boxGeometry args={[0.35, 0.08, 0.004]} />
+        <meshLambertMaterial color="#FFFFFF" />
       </mesh>
       
-      {/* LED indicator */}
-      <mesh position={[battery.dimensions.width/2 - 0.03, battery.dimensions.height/2 - 0.03, 0.130 + 0.001]}>
-        <boxGeometry args={[0.02, 0.02, 0.002]} />
+      {/* Battery model text - temporarily disabled */}
+      <mesh position={[0, 0.01, -(battery.dimensions.depth + mounting.wallOffset)/2 - 0.003]}>
+        <boxGeometry args={[0.25, 0.015, 0.005]} />
+        <meshLambertMaterial color="#333333" />
+      </mesh>
+      <mesh position={[0, -0.02, -(battery.dimensions.depth + mounting.wallOffset)/2 - 0.003]}>
+        <boxGeometry args={[0.2, 0.012, 0.005]} />
+        <meshLambertMaterial color="#666666" />
+      </mesh>
+      
+      {/* LED indicator - on the right side */}
+      <mesh position={[-battery.dimensions.width/2 + 0.03, battery.dimensions.height/2 - 0.03, -(battery.dimensions.depth + mounting.wallOffset)/2 - 0.002]}>
+        <boxGeometry args={[0.02, 0.02, 0.004]} />
         <meshLambertMaterial color="#00FF00" />
       </mesh>
     </group>
@@ -115,15 +126,21 @@ function InverterUnit({ position }: InverterUnitProps) {
       </mesh>
       
       {/* Inverter display/panel */}
-      <mesh position={[0, 0.05, 0.130 + 0.001]}>
-        <boxGeometry args={[0.25, 0.15, 0.002]} />
+      <mesh position={[0, 0.05, -(inverter.dimensions.depth + mounting.wallOffset)/2 - 0.002]}>
+        <boxGeometry args={[0.25, 0.15, 0.004]} />
         <meshLambertMaterial color="#000000" />
       </mesh>
       
       {/* AlphaEss logo area */}
-      <mesh position={[0, -0.08, 0.130 + 0.001]}>
-        <boxGeometry args={[0.35, 0.06, 0.002]} />
+      <mesh position={[0, -0.08, -(inverter.dimensions.depth + mounting.wallOffset)/2 - 0.003]}>
+        <boxGeometry args={[0.35, 0.06, 0.005]} />
         <meshLambertMaterial color="#FF6600" />
+      </mesh>
+      
+      {/* AlphaEss logo text - temporarily disabled */}
+      <mesh position={[0, -0.08, -(inverter.dimensions.depth + mounting.wallOffset)/2 - 0.004]}>
+        <boxGeometry args={[0.25, 0.015, 0.005]} />
+        <meshLambertMaterial color="#FFFFFF" />
       </mesh>
     </group>
   )
@@ -134,12 +151,8 @@ export default function EnergyStorageSystem() {
   const { energyStorage } = houseSettings
   const { position, batteryCount, battery, inverter, mounting } = energyStorage
   
-  // Calculate total installation height
-  const totalBatteryHeight = batteryCount * (battery.dimensions.height + mounting.unitSpacing)
-  const totalHeight = totalBatteryHeight + inverter.dimensions.height + mounting.unitSpacing
-  
   // Calculate positions for each unit (stack from bottom up)
-  const units: JSX.Element[] = []
+  const units: React.JSX.Element[] = []
   
   // Add batteries from bottom up
   let currentY = position.y + battery.dimensions.height / 2
