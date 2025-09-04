@@ -132,6 +132,48 @@ export default function DateTimePicker({
     return dateArray
   }, [date.getFullYear()]) // Only regenerate when year changes
 
+  // Memoize daylight segments - only recalculate when date changes
+  const daylightSegments = useMemo(() => {
+    const segments: { start: number; end: number }[] = []
+    let segmentStart: number | null = null
+    
+    // Check every 1 minute for accurate daylight detection
+    for (let timeHour = 0; timeHour < 24; timeHour += 1/60) {
+      const year = date.getFullYear()
+      const month = date.getMonth()
+      const day = date.getDate()
+      const hours = Math.floor(timeHour)
+      const minutes = Math.floor((timeHour % 1) * 60)
+      
+      const nlLocalTime = new Date(year, month, day, hours, minutes, 0)
+      const utcTime = fromZonedTime(nlLocalTime, houseSettings.location.timezone)
+      
+      const sunPosition = SunCalc.getPosition(
+        utcTime,
+        houseSettings.location.latitude,
+        houseSettings.location.longitude
+      )
+      
+      const elevation = sunPosition.altitude * 180 / Math.PI
+      
+      if (elevation > 0) {
+        if (segmentStart === null) {
+          segmentStart = timeHour
+        }
+      } else if (segmentStart !== null) {
+        segments.push({ start: segmentStart, end: timeHour })
+        segmentStart = null
+      }
+    }
+    
+    // Close any open segment
+    if (segmentStart !== null) {
+      segments.push({ start: segmentStart, end: 24 })
+    }
+    
+    return segments
+  }, [date.getFullYear(), date.getMonth(), date.getDate()]) // Only recalculate when date changes
+
 
   return (
     <>
@@ -245,59 +287,33 @@ export default function DateTimePicker({
               <div className="flex items-center h-full px-4 w-full">
                 {/* Daylight indicator - continuous green line for daylight hours */}
                 <div className="absolute top-1 left-4 right-4 h-1">
-                  {(() => {
-                    // Find daylight hours and create continuous segments
-                    const daylightSegments: { start: number; end: number }[] = []
-                    let segmentStart: number | null = null
+                  {daylightSegments.map((segment, index) => {
+                    // Convert time hours to screen positions
+                    const startOffset = segment.start - time
+                    const endOffset = segment.end - time
+                    const startPosition = 50 + (startOffset / 12) * 100
+                    const endPosition = 50 + (endOffset / 12) * 100
                     
-                    for (let hour = 0; hour < 24; hour++) {
-                      const year = date.getFullYear()
-                      const month = date.getMonth()
-                      const day = date.getDate()
-                      const hours = Math.floor(hour)
-                      const minutes = 0
-                      
-                      const nlLocalTime = new Date(year, month, day, hours, minutes, 0)
-                      const utcTime = fromZonedTime(nlLocalTime, houseSettings.location.timezone)
-                      
-                      const sunPosition = SunCalc.getPosition(
-                        utcTime,
-                        houseSettings.location.latitude,
-                        houseSettings.location.longitude
-                      )
-                      
-                      const elevation = sunPosition.altitude * 180 / Math.PI
-                      const offsetFromCurrentTime = hour - time
-                      const position = 50 + (offsetFromCurrentTime / 12) * 100
-                      
-                      if (position >= -10 && position <= 110) {
-                        if (elevation > 0) {
-                          if (segmentStart === null) {
-                            segmentStart = position
-                          }
-                        } else if (segmentStart !== null) {
-                          daylightSegments.push({ start: segmentStart, end: position })
-                          segmentStart = null
-                        }
-                      }
-                    }
+                    // Only show segments that are visible on screen
+                    if (endPosition < -10 || startPosition > 110) return null
                     
-                    // Close any open segment
-                    if (segmentStart !== null) {
-                      daylightSegments.push({ start: segmentStart, end: 110 })
-                    }
+                    const clampedStart = Math.max(0, startPosition)
+                    const clampedEnd = Math.min(100, endPosition)
+                    const width = clampedEnd - clampedStart
                     
-                    return daylightSegments.map((segment, index) => (
+                    if (width <= 0) return null
+                    
+                    return (
                       <div
                         key={`daylight-segment-${index}`}
                         className="absolute h-1 bg-green-400"
                         style={{
-                          left: `${Math.max(0, segment.start)}%`,
-                          width: `${Math.min(100, segment.end) - Math.max(0, segment.start)}%`
+                          left: `${clampedStart}%`,
+                          width: `${width}%`
                         }}
                       />
-                    ))
-                  })()}
+                    )
+                  })}
                 </div>
                 {hours.map((hour) => {
                   const isPM = hour >= 12
