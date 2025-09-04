@@ -525,8 +525,13 @@ export default function Scene3D({ sunPosition, connectorLength = 1.320, layout =
       />
       
       <Ground />
-      <House />
-      <Roof connectorLength={connectorLength} layout={layout} />
+      
+      {/* House and roof positioned 2.2m west for better centering */}
+      <group position={[-2.2, 0, 0]}>
+        <House />
+        <Roof connectorLength={connectorLength} layout={layout} />
+      </group>
+      
       <Compass />
       
       <gridHelper args={[50, 50, '#444444', '#888888']} />
