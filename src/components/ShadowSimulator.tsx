@@ -28,7 +28,7 @@ export default function ShadowSimulator() {
   const [sunPosition, setSunPosition] = useState<SunPosition>({ azimuth: 180, elevation: 45 })
   const [connectorLength, setConnectorLength] = useState(1.320)
   const [layout, setLayout] = useState<'current' | 'sw-reposition' | 'sw-portrait'>('current')
-  const [followNowTime, setFollowNowTime] = useState(false)
+  const [followNowTime, setFollowNowTime] = useState(true)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
   const getCurrentNetherlandsTime = useCallback(() => {
