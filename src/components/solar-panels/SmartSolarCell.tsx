@@ -4,6 +4,8 @@ import * as THREE from 'three'
 import { useRef, useState } from 'react'
 import { useThree, useFrame } from '@react-three/fiber'
 
+const SHADOW_RECALCULATION_DELAY = 5 // frames to wait after light moves before recalculating shadow
+
 interface SmartSolarCellProps {
   position: [number, number, number]
   geometry: [number, number, number]
@@ -30,13 +32,13 @@ export function SmartSolarCell({ position, geometry, baseColor, cellId, debugRay
   const meshRef = useRef<THREE.Mesh>(null)
   const { scene } = useThree()
   const [shadowIntensity, setShadowIntensity] = useState(0)
-  const frameCount = useRef(0)
+  const lastLightPosition = useRef<THREE.Vector3>(new THREE.Vector3())
+  const lastLightIntensity = useRef<number>(0)
+  const framesAfterLightMove = useRef<number>(0)
+  const shadowRecalculated = useRef<boolean>(true)
   const debugRaysRef = useRef<THREE.Line[]>([])
   
   useFrame(() => {
-    frameCount.current++
-    if (frameCount.current % 30 !== 0) return
-    
     if (meshRef.current) {
       let sunLight: THREE.DirectionalLight | null = null
       scene.traverse((child) => {
@@ -46,6 +48,32 @@ export function SmartSolarCell({ position, geometry, baseColor, cellId, debugRay
       })
       
       if (sunLight) {
+        // Check if light position or intensity has changed
+        const currentLightPosition = new THREE.Vector3()
+        sunLight.getWorldPosition(currentLightPosition)
+        const currentLightIntensity = sunLight.intensity
+        
+        const lightMoved = !currentLightPosition.equals(lastLightPosition.current) || 
+                          currentLightIntensity !== lastLightIntensity.current
+        
+        if (lightMoved) {
+          // Light moved, reset frame counter and mark for recalculation
+          framesAfterLightMove.current = 0
+          shadowRecalculated.current = false
+          lastLightPosition.current.copy(currentLightPosition)
+          lastLightIntensity.current = currentLightIntensity
+        } else {
+          // Light hasn't moved, increment frame counter
+          framesAfterLightMove.current++
+        }
+        
+        // Recalculate shadow only after delay frames have passed since last light move
+        if (framesAfterLightMove.current < SHADOW_RECALCULATION_DELAY || shadowRecalculated.current) {
+          return
+        } 
+        // Proceed to recalculate shadow
+        shadowRecalculated.current = true
+
         const light = sunLight as THREE.DirectionalLight
         if (light.intensity > 0) {
           const worldPos = new THREE.Vector3()
