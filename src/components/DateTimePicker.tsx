@@ -240,40 +240,61 @@ export default function DateTimePicker({
             {scaleMode === 'time' ? (
               /* Time Scale */
               <div className="flex items-center h-full px-4 w-full">
-                {/* Daylight indicator - green line on top for hours with sun elevation > 0 */}
+                {/* Daylight indicator - continuous green line for daylight hours */}
                 <div className="absolute top-1 left-4 right-4 h-1">
-                  {hours.map((hour) => {
-                    // Calculate sun elevation for this hour using the same logic as ShadowSimulator
-                    const year = date.getFullYear()
-                    const month = date.getMonth()
-                    const day = date.getDate()
-                    const hours = Math.floor(hour)
-                    const minutes = 0
+                  {(() => {
+                    // Find daylight hours and create continuous segments
+                    const daylightSegments: { start: number; end: number }[] = []
+                    let segmentStart: number | null = null
                     
-                    const nlLocalTime = new Date(year, month, day, hours, minutes, 0)
-                    const utcTime = fromZonedTime(nlLocalTime, houseSettings.location.timezone)
+                    for (let hour = 0; hour < 24; hour++) {
+                      const year = date.getFullYear()
+                      const month = date.getMonth()
+                      const day = date.getDate()
+                      const hours = Math.floor(hour)
+                      const minutes = 0
+                      
+                      const nlLocalTime = new Date(year, month, day, hours, minutes, 0)
+                      const utcTime = fromZonedTime(nlLocalTime, houseSettings.location.timezone)
+                      
+                      const sunPosition = SunCalc.getPosition(
+                        utcTime,
+                        houseSettings.location.latitude,
+                        houseSettings.location.longitude
+                      )
+                      
+                      const elevation = sunPosition.altitude * 180 / Math.PI
+                      const offsetFromCurrentTime = hour - time
+                      const position = 50 + (offsetFromCurrentTime / 12) * 100
+                      
+                      if (position >= -10 && position <= 110) {
+                        if (elevation > 0) {
+                          if (segmentStart === null) {
+                            segmentStart = position
+                          }
+                        } else if (segmentStart !== null) {
+                          daylightSegments.push({ start: segmentStart, end: position })
+                          segmentStart = null
+                        }
+                      }
+                    }
                     
-                    const sunPosition = SunCalc.getPosition(
-                      utcTime,
-                      houseSettings.location.latitude,
-                      houseSettings.location.longitude
-                    )
+                    // Close any open segment
+                    if (segmentStart !== null) {
+                      daylightSegments.push({ start: segmentStart, end: 110 })
+                    }
                     
-                    const elevation = Math.max(0, sunPosition.altitude * 180 / Math.PI)
-                    
-                    const offsetFromCurrentTime = hour - time
-                    const position = 50 + (offsetFromCurrentTime / 12) * 100
-                    
-                    if (position < -10 || position > 110 || elevation <= 0) return null
-                    
-                    return (
+                    return daylightSegments.map((segment, index) => (
                       <div
-                        key={`daylight-${hour}`}
-                        className="absolute w-8 h-1 bg-green-400"
-                        style={{ left: `${position}%`, transform: 'translateX(-50%)' }}
+                        key={`daylight-segment-${index}`}
+                        className="absolute h-1 bg-green-400"
+                        style={{
+                          left: `${Math.max(0, segment.start)}%`,
+                          width: `${Math.min(100, segment.end) - Math.max(0, segment.start)}%`
+                        }}
                       />
-                    )
-                  })}
+                    ))
+                  })()}
                 </div>
                 {hours.map((hour) => {
                   const isPM = hour >= 12
