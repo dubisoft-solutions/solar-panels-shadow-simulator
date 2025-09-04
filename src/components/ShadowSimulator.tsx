@@ -7,6 +7,7 @@ import * as SunCalc from 'suncalc'
 import { fromZonedTime, toZonedTime } from 'date-fns-tz'
 import Scene3D from './Scene3D'
 import Controls from './Controls'
+import DateTimePicker from './DateTimePicker'
 import { houseSettings } from '@/config/houseSettings'
 import { simulatorSettings } from '@/config/simulatorSettings'
 
@@ -150,16 +151,19 @@ export default function ShadowSimulator() {
       </Canvas>
       
       <Controls
-        date={date}
-        time={time}
         sunPosition={sunPosition}
         connectorLength={connectorLength}
         layout={layout}
+        onConnectorLengthChange={setConnectorLength}
+        onLayoutChange={setLayout}
+      />
+      
+      <DateTimePicker
+        date={date}
+        time={time}
         followNowTime={followNowTime}
         onDateChange={handleDateChange}
         onTimeChange={handleTimeChange}
-        onConnectorLengthChange={setConnectorLength}
-        onLayoutChange={setLayout}
         onFollowNowTimeChange={handleFollowNowTimeChange}
       />
     </div>
