@@ -15,14 +15,14 @@ interface ControlsProps {
 }
 
 export default function Controls({ sunPosition, connectorLength, layout, onConnectorLengthChange, onLayoutChange }: ControlsProps) {
-  const [isExpanded, setIsExpanded] = useState(true)
+  const [isExpanded, setIsExpanded] = useState(false)
   const displayDimensions = getDisplayDimensions(houseSettings)
 
 
   return (
     <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-4 w-80">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-800">Shadow Simulator</h2>
+        <h2 className="text-lg font-semibold text-gray-800">House specification</h2>
         <button
           onClick={() => setIsExpanded(!isExpanded)}
           className="text-gray-600 hover:text-gray-800"
