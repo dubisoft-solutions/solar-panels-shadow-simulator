@@ -219,7 +219,10 @@ export default function DateTimePicker({
               
               return (
                 <>
-                  <div className="font-mono">{elevation.toFixed(1)}°</div>
+                  <div className="font-mono flex items-center gap-1">
+                    {elevation.toFixed(1)}°
+                    <span className="text-xs">∠</span>
+                  </div>
                   <div className="font-mono">{azimuth.toFixed(1)}° {direction}</div>
                 </>
               )
