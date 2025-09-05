@@ -49,11 +49,11 @@ export function SmartSolarCell({ position, geometry, baseColor, cellId, debugRay
       
       if (sunLight) {
         // Check if light position or intensity has changed
-        const currentLightPosition = new THREE.Vector3()
-        sunLight.getWorldPosition(currentLightPosition)
-        const currentLightIntensity = sunLight.intensity
-        
-        const lightMoved = !currentLightPosition.equals(lastLightPosition.current) || 
+        const currentLightPosition: THREE.Vector3 = new THREE.Vector3();
+        (sunLight as THREE.DirectionalLight).getWorldPosition(currentLightPosition)
+        const currentLightIntensity: number = (sunLight as THREE.DirectionalLight).intensity
+
+        const lightMoved = !currentLightPosition.equals(lastLightPosition.current) ||
                           currentLightIntensity !== lastLightIntensity.current
         
         if (lightMoved) {
