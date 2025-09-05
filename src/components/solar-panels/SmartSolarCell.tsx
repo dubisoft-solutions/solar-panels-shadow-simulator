@@ -166,7 +166,7 @@ export function SmartSolarCell({ position, geometry, baseColor, cellId, debugRay
             samplePoints.forEach((point, index) => {
               // Use the exact same ray direction as in checkShadow function
               const rayDirection = new THREE.Vector3()
-              rayDirection.subVectors(lightWorldPos, point).normalize()
+              rayDirection.subVectors(currentLightWorldPos, point).normalize()
               const rayEnd = point.clone().add(rayDirection.clone().multiplyScalar(rayLength))
               
               // Create line geometry
