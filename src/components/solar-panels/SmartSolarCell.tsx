@@ -48,19 +48,22 @@ export function SmartSolarCell({ position, geometry, baseColor, cellId, debugRay
       })
       
       if (sunLight) {
-        // Check if light position or intensity has changed
-        const currentLightPosition: THREE.Vector3 = new THREE.Vector3();
-        (sunLight as THREE.DirectionalLight).getWorldPosition(currentLightPosition)
-        const currentLightIntensity: number = (sunLight as THREE.DirectionalLight).intensity
+        const light = sunLight as THREE.DirectionalLight
 
-        const lightMoved = !currentLightPosition.equals(lastLightPosition.current) ||
+        // get current light world position
+        const currentLightWorldPos: THREE.Vector3 = new THREE.Vector3();
+        light.getWorldPosition(currentLightWorldPos)
+        
+        // Check if light position or intensity has changed
+        const currentLightIntensity: number = light.intensity
+        const lightMoved = !currentLightWorldPos.equals(lastLightPosition.current) ||
                           currentLightIntensity !== lastLightIntensity.current
         
         if (lightMoved) {
           // Light moved, reset frame counter and mark for recalculation
           framesAfterLightMove.current = 0
           shadowRecalculated.current = false
-          lastLightPosition.current.copy(currentLightPosition)
+          lastLightPosition.current.copy(currentLightWorldPos)
           lastLightIntensity.current = currentLightIntensity
         } else {
           // Light hasn't moved, increment frame counter
@@ -74,8 +77,7 @@ export function SmartSolarCell({ position, geometry, baseColor, cellId, debugRay
         // Proceed to recalculate shadow
         shadowRecalculated.current = true
 
-        const light = sunLight as THREE.DirectionalLight
-        if (light.intensity > 0) {
+        if (currentLightIntensity > 0) {
           const worldPos = new THREE.Vector3()
           meshRef.current!.getWorldPosition(worldPos)
           
@@ -83,15 +85,11 @@ export function SmartSolarCell({ position, geometry, baseColor, cellId, debugRay
           light.getWorldDirection(lightDirection)
           lightDirection.negate() // Point towards the light
           
-          
           const raycaster = new THREE.Raycaster()
-          
-          const lightWorldPos = new THREE.Vector3()
-          light.getWorldPosition(lightWorldPos)
           
           const checkShadow = (position: THREE.Vector3) => {
             const rayDirection = new THREE.Vector3()
-            rayDirection.subVectors(lightWorldPos, position).normalize()
+            rayDirection.subVectors(currentLightWorldPos, position).normalize()
             raycaster.set(position, rayDirection)
             
             const intersects = raycaster.intersectObjects(scene.children, true)

@@ -47,7 +47,7 @@ export default function RoofSolarInstallation({
       
       panels.push(
         <Platform
-          key={`panel-${row}-${col}`}
+          key={`panel-${row}-${col}-${orientation}-${connectorLength}`}
           position={CoordinateTransformationService.edgeToThreeJs(edgePosition, platformDimensions)}
           dimensions={{
             length: platformDimensions.width,
