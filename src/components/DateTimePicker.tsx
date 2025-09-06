@@ -147,7 +147,7 @@ export default function DateTimePicker({
     return minuteList
   }, [time])
 
-  // Generate dates for date scale (infinite-like)  
+  // Generate dates for date scale (infinite-like) - memoize more aggressively
   const dates = useMemo(() => {
     const dateList = []
     // Use a more reliable method that handles month boundaries properly
@@ -155,10 +155,15 @@ export default function DateTimePicker({
     
     for (let i = -30; i <= 60; i++) { // Show 91 days total (even more days visible)
       const newDate = new Date(baseDate.getTime() + i * 24 * 60 * 60 * 1000)
-      dateList.push(newDate)
+      dateList.push({
+        date: newDate,
+        day: newDate.getDate(),
+        month: newDate.toLocaleDateString('en-US', { month: 'short' }),
+        key: `date-${newDate.getTime()}`
+      })
     }
     return dateList
-  }, [date.getTime()]) // Dependencies on actual timestamp
+  }, [Math.floor(date.getTime() / (24 * 60 * 60 * 1000))]) // Only recalculate when date changes
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', {
@@ -427,95 +432,60 @@ export default function DateTimePicker({
             ) : (
               /* Date Scale */
               <div className="flex items-center h-full px-4 w-full">
-                {(() => {
-                  // First, filter visible dates
-                  const visibleDates = dates.map((dateItem, index) => {
-                    const dayOfMonth = dateItem.getDate()
-                    const month = dateItem.toLocaleDateString('en-US', { month: 'short' })
-                    
-                    // Calculate position relative to current date using exact time difference
-                    const timeDiff = dateItem.getTime() - date.getTime()
-                    const dayOffset = timeDiff / (1000 * 60 * 60 * 24) // Exact fractional days
-                    const position = 50 + (dayOffset / 30) * 100
-                    
-                    // Only include dates within visible range
-                    if (position < -20 || position > 120) return null
-                    
-                    return {
-                      dateItem,
-                      index,
-                      dayOfMonth,
-                      month,
-                      position
-                    }
-                  }).filter(Boolean) as Array<{
-                    dateItem: Date;
-                    index: number;
-                    dayOfMonth: number;
-                    month: string;
-                    position: number;
-                  }>
+                {dates.map((dateItem, index) => {
+                  const { date: itemDate, day: dayOfMonth, month, key } = dateItem
                   
-                  // Sort by position (left to right) to process in visual order
-                  visibleDates.sort((a, b) => a.position - b.position)
+                  // Calculate position relative to current date using exact time difference
+                  const timeDiff = itemDate.getTime() - date.getTime()
+                  const dayOffset = timeDiff / (1000 * 60 * 60 * 24) // Exact fractional days
+                  const position = 50 + (dayOffset / 30) * 100
+                  
+                  // Only show dates within visible range
+                  if (position < -20 || position > 120) return null
                   
                   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
-                  const monthNameRendered = new Map()
                   
-                  return visibleDates.map((item) => {
-                    const { dateItem, index, dayOfMonth, month, position } = item
-                    const monthKey = `${dateItem.getFullYear()}-${dateItem.getMonth()}`
-                    
-                    // Check if we need to render month name for this month
-                    const shouldShowMonthName = !monthNameRendered.has(monthKey)
-                    if (shouldShowMonthName) {
-                      monthNameRendered.set(monthKey, true)
-                    }
-                  
-                    return (
-                      <div
-                        key={`date-${index}`}
-                        className="absolute flex flex-col items-center justify-center h-full text-gray-300"
-                        style={{ left: `${position}%`, transform: 'translateX(-50%)' }}
-                      >
-                        <div className={`w-0.5 bg-current mb-1 ${
-                          dayOfMonth === 1 ? 'h-4' : 'h-2'
-                        } ${
-                          isMobile && dayOfMonth % 10 !== 0 ? 'opacity-0' : ''
-                        }`} />
-                        <div className="text-xs whitespace-nowrap text-center">
-                          {(() => {
-                            // Show labels based on static rules, not relative to current position
-                            
-                            if (isMobile) {
-                              // On mobile, show every 10th day
-                              if (dayOfMonth % 10 === 0) {
-                                return (
-                                  <>
-                                    <div>{dayOfMonth}</div>
-                                    <div className="text-xs opacity-60">{month.toUpperCase()}</div>
-                                  </>
-                                )
-                              }
-                              return ''
-                            } else {
-                              // Desktop: show every 5th day
-                              if (dayOfMonth % 5 === 0) {
-                                return (
-                                  <>
-                                    <div>{dayOfMonth}</div>
-                                    <div className="text-xs opacity-60">{month.toUpperCase()}</div>
-                                  </>
-                                )
-                              }
-                              return ''
+                  return (
+                    <div
+                      key={key}
+                      className="absolute flex flex-col items-center justify-center h-full text-gray-300"
+                      style={{ left: `${position}%`, transform: 'translateX(-50%)' }}
+                    >
+                      <div className={`w-0.5 bg-current mb-1 ${
+                        dayOfMonth === 1 ? 'h-4' : 'h-2'
+                      } ${
+                        isMobile && dayOfMonth % 10 !== 0 ? 'opacity-0' : ''
+                      }`} />
+                      <div className="text-xs whitespace-nowrap text-center">
+                        {(() => {
+                          if (isMobile) {
+                            // On mobile, show every 10th day
+                            if (dayOfMonth % 10 === 0) {
+                              return (
+                                <>
+                                  <div>{dayOfMonth}</div>
+                                  <div className="text-xs opacity-60">{month.toUpperCase()}</div>
+                                </>
+                              )
                             }
-                          })()}
-                        </div>
+                            return null
+                          } else {
+                            // Desktop: show every 5th day
+                            if (dayOfMonth % 5 === 0) {
+                              return (
+                                <>
+                                  <div>{dayOfMonth}</div>
+                                  <div className="text-xs opacity-60">{month.toUpperCase()}</div>
+                                </>
+                              )
+                            }
+                            return null
+                          }
+                        })()}
                       </div>
-                    )
-                  })
-                })()}
+                    </div>
+                  )
+                })}
               </div>
             )}
           </div>
