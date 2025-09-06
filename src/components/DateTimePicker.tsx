@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import * as SunCalc from 'suncalc'
 import { fromZonedTime } from 'date-fns-tz'
 import { houseSettings } from '@/config/houseSettings'
@@ -28,7 +28,137 @@ export default function DateTimePicker({
   const [isDragging, setIsDragging] = useState(false)
   const dragStartX = useRef(0)
   const dragStartValue = useRef(0)
-  const scrollRef = useRef<HTMLDivElement>(null)
+  const rememberedDate = useRef<Date>(new Date())
+  const rememberedTime = useRef(0)
+
+  // Simple drag handler with remembering initial date/time
+  const handleDrag = (clientX: number, startDrag = false) => {
+    if (startDrag) {
+      dragStartX.current = clientX
+      rememberedDate.current = new Date(date)
+      rememberedTime.current = time
+      
+      if (scaleMode === 'time') {
+        dragStartValue.current = time
+      } else {
+        dragStartValue.current = date.getTime()
+      }
+      setIsDragging(true)
+      return
+    }
+    
+    const movement = clientX - dragStartX.current
+    
+    if (scaleMode === 'time') {
+      // Time scrolling: match the visual scale exactly
+      const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1000
+      const percentageMovement = movement / viewportWidth * 100
+      const timeChange = -percentageMovement * 0.03 // 3 hours per 100% = 0.03 hours per 1%
+      
+      const newTime = rememberedTime.current + timeChange
+      const wrappedTime = ((newTime % 24) + 24) % 24 // Always wrap time to 0-24
+      
+      // Determine which day we're on based on midnight crossings from remembered time
+      let dayOffset = 0
+      
+      if (newTime >= 24) {
+        // Crossed forward past midnight(s)
+        dayOffset = Math.floor(newTime / 24)
+      } else if (newTime < 0) {
+        // Crossed backward past midnight(s)
+        dayOffset = -Math.ceil(Math.abs(newTime) / 24)
+      }
+      
+      // Calculate the new date based on remembered date + day offset
+      const adjustedDate = new Date(rememberedDate.current.getTime() + dayOffset * 24 * 60 * 60 * 1000)
+      
+      onDateChange(adjustedDate)
+      onTimeChange(wrappedTime)
+    } else {
+      // Date scrolling: 60px = 1 day (double sensitivity), but allow fractional changes during drag
+      const dayChange = -movement / 60 // Don't round during drag
+      const newDate = new Date(dragStartValue.current + dayChange * 24 * 60 * 60 * 1000)
+      
+      // Only update if the change is significant enough
+      if (Math.abs(newDate.getTime() - date.getTime()) > 1000 * 60 * 60) { // 1 hour threshold
+        onDateChange(newDate)
+      }
+    }
+  }
+
+  const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    handleDrag(event.clientX, true)
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      handleDrag(e.clientX)
+    }
+    
+    const handleMouseUp = () => {
+      setIsDragging(false)
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+    
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+  }
+
+  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    handleDrag(event.touches[0].clientX, true)
+    
+    const handleTouchMove = (e: TouchEvent) => {
+      e.preventDefault()
+      handleDrag(e.touches[0].clientX)
+    }
+    
+    const handleTouchEnd = () => {
+      setIsDragging(false)
+      document.removeEventListener('touchmove', handleTouchMove)
+      document.removeEventListener('touchend', handleTouchEnd)
+    }
+    
+    document.addEventListener('touchmove', handleTouchMove, { passive: false })
+    document.addEventListener('touchend', handleTouchEnd)
+  }
+
+  // Generate minutes for time scale (show every minute for precision)
+  const minutes = useMemo(() => {
+    const minuteList = []
+    const startTime = time - 12 // Show 12 hours before
+    const endTime = time + 36   // Show 36 hours after
+    
+    // Generate every minute in the range
+    for (let t = startTime; t <= endTime; t += 1/60) { // 1/60 hour = 1 minute
+      const rawHour = Math.floor(t)
+      const fractionalPart = t - rawHour
+      const minute = Math.floor(Math.abs(fractionalPart) * 60) // Handle negative fractional parts
+      const wrappedHour = ((rawHour % 24) + 24) % 24 // Wrap to 0-23
+      
+      minuteList.push({ 
+        value: t, 
+        hour: wrappedHour, 
+        minute: minute,
+        isHour: minute === 0,
+        actualTime: t // Keep the actual time value for date detection
+      })
+    }
+    return minuteList
+  }, [time])
+
+  // Generate dates for date scale (infinite-like)  
+  const dates = useMemo(() => {
+    const dateList = []
+    // Use a more reliable method that handles month boundaries properly
+    const baseDate = new Date(date.getTime()) // Clone the date
+    
+    for (let i = -30; i <= 60; i++) { // Show 91 days total (even more days visible)
+      const newDate = new Date(baseDate.getTime() + i * 24 * 60 * 60 * 1000)
+      dateList.push(newDate)
+    }
+    return dateList
+  }, [date.getTime()]) // Dependencies on actual timestamp
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', {
@@ -44,93 +174,6 @@ export default function DateTimePicker({
     const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h
     return `${displayHour.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${isPM ? 'PM' : 'AM'}`
   }
-
-  const handleScaleDrag = (clientX: number, startDrag = false) => {
-    if (startDrag) {
-      dragStartX.current = clientX
-      if (scaleMode === 'time') {
-        dragStartValue.current = time
-      } else {
-        dragStartValue.current = dates.findIndex(d => d.toDateString() === date.toDateString())
-      }
-      setIsDragging(true)
-      return
-    }
-    
-    const movement = clientX - dragStartX.current
-    
-    if (scaleMode === 'time') {
-      // Map movement to time change - 100px = 1 hour (inverted: left = backward, right = forward)
-      const timeChange = -movement / 100
-      const newTime = Math.max(0, Math.min(24, dragStartValue.current + timeChange))
-      onTimeChange(newTime)
-    } else {
-      // Map movement to date change - 10px = 1 day (more sensitive for faster scrolling)
-      const dayChange = Math.round(-movement / 10)
-      const newIndex = Math.max(0, Math.min(dates.length - 1, dragStartValue.current + dayChange))
-      if (dates[newIndex]) {
-        onDateChange(dates[newIndex])
-      }
-    }
-  }
-
-  const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
-    event.preventDefault()
-    const clientX = event.clientX
-    handleScaleDrag(clientX, true)
-    
-    const handleMouseMove = (e: MouseEvent) => {
-      handleScaleDrag(e.clientX)
-    }
-    
-    const handleMouseUp = () => {
-      setIsDragging(false)
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mouseup', handleMouseUp)
-    }
-    
-    document.addEventListener('mousemove', handleMouseMove)
-    document.addEventListener('mouseup', handleMouseUp)
-  }
-
-  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
-    event.preventDefault()
-    const clientX = event.touches[0].clientX
-    handleScaleDrag(clientX, true)
-    
-    const handleTouchMove = (e: TouchEvent) => {
-      e.preventDefault()
-      handleScaleDrag(e.touches[0].clientX)
-    }
-    
-    const handleTouchEnd = () => {
-      setIsDragging(false)
-      document.removeEventListener('touchmove', handleTouchMove)
-      document.removeEventListener('touchend', handleTouchEnd)
-    }
-    
-    document.addEventListener('touchmove', handleTouchMove, { passive: false })
-    document.addEventListener('touchend', handleTouchEnd)
-  }
-
-  // Generate hours for time scale
-  const hours = Array.from({ length: 24 }, (_, i) => i)
-
-  // Memoize dates array to prevent infinite re-renders
-  const dates = useMemo(() => {
-    const currentYear = date.getFullYear()
-    const dateArray: Date[] = []
-    
-    // Only generate current year to improve performance
-    for (let month = 0; month < 12; month++) {
-      const daysInMonth = new Date(currentYear, month + 1, 0).getDate()
-      for (let day = 1; day <= daysInMonth; day++) {
-        dateArray.push(new Date(currentYear, month, day))
-      }
-    }
-    
-    return dateArray
-  }, [date.getFullYear()]) // Only regenerate when year changes
 
   // Memoize daylight segments - only recalculate when date changes
   const daylightSegments = useMemo(() => {
@@ -277,7 +320,6 @@ export default function DateTimePicker({
       <div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-sm text-white z-10">
         <div className="h-14 flex items-center relative overflow-hidden">
           <div 
-            ref={scrollRef}
             className={`flex-1 relative h-full select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
             onMouseDown={handleMouseDown}
             onTouchStart={handleTouchStart}
@@ -288,11 +330,11 @@ export default function DateTimePicker({
                 {/* Daylight indicator - continuous green line for daylight hours */}
                 <div className="absolute top-1 left-4 right-4 h-1">
                   {daylightSegments.map((segment, index) => {
-                    // Convert time hours to screen positions
+                    // Convert time hours to screen positions (match the new 3-hour scale)
                     const startOffset = segment.start - time
                     const endOffset = segment.end - time
-                    const startPosition = 50 + (startOffset / 12) * 100
-                    const endPosition = 50 + (endOffset / 12) * 100
+                    const startPosition = 50 + (startOffset / 3) * 100 // 3 hours = 100% (same as ticks)
+                    const endPosition = 50 + (endOffset / 3) * 100
                     
                     // Only show segments that are visible on screen
                     if (endPosition < -10 || startPosition > 110) return null
@@ -315,36 +357,68 @@ export default function DateTimePicker({
                     )
                   })}
                 </div>
-                {hours.map((hour) => {
+                {minutes.map((timeItem, index) => {
+                  const hour = timeItem.hour
                   const isPM = hour >= 12
                   const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
-                  const label = hour === 0 ? '12 AM' : hour === 12 ? '12 PM' : `${displayHour} ${isPM ? 'PM' : 'AM'}`
                   
-                  // Calculate position relative to current time - center the current time
-                  const offsetFromCurrentTime = hour - time
-                  const position = 50 + (offsetFromCurrentTime / 12) * 100 // Wider spacing for mobile
+                  // Calculate position relative to current time (wider scale)
+                  const offsetFromCurrentTime = timeItem.value - time
+                  const position = 50 + (offsetFromCurrentTime / 3) * 100 // 3 hours = 100% (instead of 12)
                   
-                  // Only show hours within visible range
+                  // Only show ticks within visible range
                   if (position < -10 || position > 110) return null
                   
-                  // Show fewer hours on mobile
                   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
-                  const showLabel = isMobile ? hour % 6 === 0 : (hour % 6 === 0 || hour % 3 === 0)
-                  const showTick = isMobile ? hour % 2 === 0 : true
                   
-                  if (!showTick) return null
+                  // Tick height based on time significance
+                  const minute = timeItem.minute
+                  let tickHeight = 'h-1' // Default for minutes
+                  let showTick = true
+                  
+                  if (minute === 0) {
+                    // Hour marks
+                    if (hour % 6 === 0) tickHeight = 'h-4' // Major hours (6, 12, 18, 24)
+                    else if (hour % 3 === 0) tickHeight = 'h-3' // Minor hours (3, 9, 15, 21)
+                    else tickHeight = 'h-2' // Regular hours
+                  } else if (minute === 30) {
+                    // Half-hour marks
+                    tickHeight = 'h-2' // Same as regular hours
+                  } else if (isMobile) {
+                    // Hide minute ticks on mobile, but keep the spacing
+                    showTick = minute % 15 === 0 // Only show every 15 minutes on mobile
+                  }
+                  
+                  // Show labels every 30 minutes
+                  const labelText = (() => {
+                    const minute = timeItem.minute
+                    
+                    // Only show labels at :00 and :30
+                    if (minute !== 0 && minute !== 30) return ''
+                    
+                    const minuteStr = minute.toString().padStart(2, '0')
+                    const timeStr = `${displayHour}:${minuteStr} ${isPM ? 'PM' : 'AM'}`
+                    
+                    if (isMobile) {
+                      // Mobile: show fewer labels to avoid crowding
+                      // Use the wrapped hour for the modulo check
+                      if (minute === 0 && hour % 2 === 0) return timeStr // Every 2 hours on the hour
+                      return ''
+                    } else {
+                      // Desktop: show every 30 minutes
+                      return timeStr
+                    }
+                  })()
                   
                   return (
                     <div
-                      key={hour}
+                      key={`time-${index}`}
                       className="absolute flex flex-col items-center justify-center h-full text-gray-300"
                       style={{ left: `${position}%`, transform: 'translateX(-50%)' }}
                     >
-                      <div className={`w-0.5 bg-current mb-1 ${
-                        hour % 6 === 0 ? 'h-4' : hour % 3 === 0 ? 'h-3' : 'h-2'
-                      }`} />
+                      {showTick && <div className={`w-0.5 bg-current mb-2 ${tickHeight}`} />}
                       <span className="text-xs whitespace-nowrap">
-                        {showLabel ? (hour % 6 === 0 ? label : displayHour.toString()) : ''}
+                        {labelText}
                       </span>
                     </div>
                   )
@@ -353,38 +427,95 @@ export default function DateTimePicker({
             ) : (
               /* Date Scale */
               <div className="flex items-center h-full px-4 w-full">
-                {dates.map((dateItem, index) => {
-                  const dayOfMonth = dateItem.getDate()
-                  const month = dateItem.toLocaleDateString('en-US', { month: 'short' })
-                  const isFirstOfMonth = dayOfMonth === 1
+                {(() => {
+                  // First, filter visible dates
+                  const visibleDates = dates.map((dateItem, index) => {
+                    const dayOfMonth = dateItem.getDate()
+                    const month = dateItem.toLocaleDateString('en-US', { month: 'short' })
+                    
+                    // Calculate position relative to current date using exact time difference
+                    const timeDiff = dateItem.getTime() - date.getTime()
+                    const dayOffset = timeDiff / (1000 * 60 * 60 * 24) // Exact fractional days
+                    const position = 50 + (dayOffset / 30) * 100
+                    
+                    // Only include dates within visible range
+                    if (position < -20 || position > 120) return null
+                    
+                    return {
+                      dateItem,
+                      index,
+                      dayOfMonth,
+                      month,
+                      position
+                    }
+                  }).filter(Boolean) as Array<{
+                    dateItem: Date;
+                    index: number;
+                    dayOfMonth: number;
+                    month: string;
+                    position: number;
+                  }>
                   
-                  // Calculate position relative to current date - center the current date
-                  const currentIndex = dates.findIndex(d => d.toDateString() === date.toDateString())
-                  const offsetFromCurrentDate = index - currentIndex
-                  const position = 50 + (offsetFromCurrentDate / 30) * 100 // Wider spacing for mobile
+                  // Sort by position (left to right) to process in visual order
+                  visibleDates.sort((a, b) => a.position - b.position)
                   
-                  // Only show dates within a smaller range for mobile readability
-                  if (position < -20 || position > 120) return null
-                  
-                  // Show fewer dates on mobile - only every 3rd day except for first of month
                   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
-                  if (isMobile && !isFirstOfMonth && index % 3 !== 0) return null
+                  const monthNameRendered = new Map()
                   
-                  return (
-                    <div
-                      key={index}
-                      className="absolute flex flex-col items-center justify-center h-full text-gray-300"
-                      style={{ left: `${position}%`, transform: 'translateX(-50%)' }}
-                    >
-                      <div className={`w-0.5 bg-current mb-1 ${
-                        isFirstOfMonth ? 'h-4' : 'h-2'
-                      }`} />
-                      <span className="text-xs whitespace-nowrap">
-                        {isFirstOfMonth ? `${month} ${dayOfMonth}` : dayOfMonth.toString()}
-                      </span>
-                    </div>
-                  )
-                })}
+                  return visibleDates.map((item) => {
+                    const { dateItem, index, dayOfMonth, month, position } = item
+                    const monthKey = `${dateItem.getFullYear()}-${dateItem.getMonth()}`
+                    
+                    // Check if we need to render month name for this month
+                    const shouldShowMonthName = !monthNameRendered.has(monthKey)
+                    if (shouldShowMonthName) {
+                      monthNameRendered.set(monthKey, true)
+                    }
+                  
+                    return (
+                      <div
+                        key={`date-${index}`}
+                        className="absolute flex flex-col items-center justify-center h-full text-gray-300"
+                        style={{ left: `${position}%`, transform: 'translateX(-50%)' }}
+                      >
+                        <div className={`w-0.5 bg-current mb-1 ${
+                          dayOfMonth === 1 ? 'h-4' : 'h-2'
+                        } ${
+                          isMobile && dayOfMonth % 10 !== 0 ? 'opacity-0' : ''
+                        }`} />
+                        <div className="text-xs whitespace-nowrap text-center">
+                          {(() => {
+                            // Show labels based on static rules, not relative to current position
+                            
+                            if (isMobile) {
+                              // On mobile, show every 10th day
+                              if (dayOfMonth % 10 === 0) {
+                                return (
+                                  <>
+                                    <div>{dayOfMonth}</div>
+                                    <div className="text-xs opacity-60">{month.toUpperCase()}</div>
+                                  </>
+                                )
+                              }
+                              return ''
+                            } else {
+                              // Desktop: show every 5th day
+                              if (dayOfMonth % 5 === 0) {
+                                return (
+                                  <>
+                                    <div>{dayOfMonth}</div>
+                                    <div className="text-xs opacity-60">{month.toUpperCase()}</div>
+                                  </>
+                                )
+                              }
+                              return ''
+                            }
+                          })()}
+                        </div>
+                      </div>
+                    )
+                  })
+                })()}
               </div>
             )}
           </div>
