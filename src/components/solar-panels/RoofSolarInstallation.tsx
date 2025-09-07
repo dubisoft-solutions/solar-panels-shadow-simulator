@@ -63,7 +63,7 @@ export default function RoofSolarInstallation({
   
   const connectors = []
   for (let i = 0; i < rows - 1; i++) {
-    const connectorStart = i * spacing.rowSpacing + spacing.platformLength
+    const connectorStart = i * spacing.rowSpacing + spacing.projectedDepth
     const connectorEnd = (i + 1) * spacing.rowSpacing
     const connectorZ = (connectorStart + connectorEnd) / 2
     
