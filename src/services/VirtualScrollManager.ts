@@ -76,7 +76,6 @@ export class VirtualScrollManager {
    * @returns True if range was recalculated
    */
   updateCenterDate(newCenterDate: Date, forceRecalculation: boolean = false): boolean {
-    const oldCenterDate = this.state.scrollState.centerDate
     this.state.scrollState.centerDate = new Date(newCenterDate)
     this.state.scrollState.lastScrollTime = Date.now()
 

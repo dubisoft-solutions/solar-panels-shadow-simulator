@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useRef, useEffect } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import * as SunCalc from 'suncalc'
 import { fromZonedTime } from 'date-fns-tz'
 import { houseSettings } from '@/config/houseSettings'
@@ -152,7 +152,7 @@ export default function DateTimePicker({
     const dateList = []
     // Use a more reliable method that handles month boundaries properly
     const baseDate = new Date(date.getTime()) // Clone the date
-    
+
     for (let i = -30; i <= 60; i++) { // Show 91 days total (even more days visible)
       const newDate = new Date(baseDate.getTime() + i * 24 * 60 * 60 * 1000)
       dateList.push({
@@ -163,7 +163,7 @@ export default function DateTimePicker({
       })
     }
     return dateList
-  }, [Math.floor(date.getTime() / (24 * 60 * 60 * 1000))]) // Only recalculate when date changes
+  }, [date]) // Only recalculate when date changes
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', {
@@ -181,29 +181,32 @@ export default function DateTimePicker({
   }
 
   // Memoize daylight segments - only recalculate when date changes
+  const dateYear = date.getFullYear()
+  const dateMonth = date.getMonth()
+  const dateDay = date.getDate()
   const daylightSegments = useMemo(() => {
     const segments: { start: number; end: number }[] = []
     let segmentStart: number | null = null
-    
+
     // Check every 1 minute for accurate daylight detection
     for (let timeHour = 0; timeHour < 24; timeHour += 1/60) {
-      const year = date.getFullYear()
-      const month = date.getMonth()
-      const day = date.getDate()
+      const year = dateYear
+      const month = dateMonth
+      const day = dateDay
       const hours = Math.floor(timeHour)
       const minutes = Math.floor((timeHour % 1) * 60)
-      
+
       const nlLocalTime = new Date(year, month, day, hours, minutes, 0)
       const utcTime = fromZonedTime(nlLocalTime, houseSettings.location.timezone)
-      
+
       const sunPosition = SunCalc.getPosition(
         utcTime,
         houseSettings.location.latitude,
         houseSettings.location.longitude
       )
-      
+
       const elevation = sunPosition.altitude * 180 / Math.PI
-      
+
       if (elevation > 0) {
         if (segmentStart === null) {
           segmentStart = timeHour
@@ -213,14 +216,14 @@ export default function DateTimePicker({
         segmentStart = null
       }
     }
-    
+
     // Close any open segment
     if (segmentStart !== null) {
       segments.push({ start: segmentStart, end: 24 })
     }
-    
+
     return segments
-  }, [date.getFullYear(), date.getMonth(), date.getDate()]) // Only recalculate when date changes
+  }, [dateYear, dateMonth, dateDay]) // Only recalculate when date changes
 
 
   return (
@@ -432,7 +435,7 @@ export default function DateTimePicker({
             ) : (
               /* Date Scale */
               <div className="flex items-center h-full px-4 w-full">
-                {dates.map((dateItem, index) => {
+                {dates.map((dateItem) => {
                   const { date: itemDate, day: dayOfMonth, month, key } = dateItem
                   
                   // Calculate position relative to current date using exact time difference

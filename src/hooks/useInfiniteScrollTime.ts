@@ -242,7 +242,7 @@ export const useInfiniteScrollTime = ({
   const labelInterval = useMemo(() => {
     if (!scrollManager) return 1
     return scrollManager.getOptimalLabelInterval()
-  }, [scrollManager, visibleTimes.length])
+  }, [scrollManager])
 
   // Cleanup on unmount
   useEffect(() => {
