@@ -6,6 +6,7 @@ import * as THREE from 'three'
 import { houseSettings } from '@/config/houseSettings'
 import RoofSolarInstallation from './solar-panels/RoofSolarInstallation'
 import EnergyStorageSystem from './EnergyStorageSystem'
+import WoodenShell from './WoodenShell'
 import { PANEL_SPECS, LANDSCAPE_PLATFORM_SPECS, PORTRAIT_PLATFORM_SPECS } from '@/config/solarPanelInstallationSettings'
 import { CoordinateTransformationService } from '@/services/CoordinateTransformationService'
 import { PanelSpacingService } from '@/services/PanelSpacingService'
@@ -424,6 +425,9 @@ function House() {
       
       {/* Energy Storage System on north wall */}
       <EnergyStorageSystem />
+      
+      {/* Wooden Shell for battery enclosure */}
+      <WoodenShell />
       
       {/* <mesh castShadow position={[0, houseHeight + 0.5, 0]}>
         <coneGeometry args={[Math.max(houseWidth, houseDepth) * 0.7, 1, 4]} />

@@ -181,18 +181,18 @@ export const houseSettings: HouseSettings = {
     inverter: {
       model: 'AlphaEss Smile G3 S5',
       dimensions: {
-        width: 0.610,   // 610mm
+        width: ENERGY_STORAGE_UNIT_WIDTH,
         height: 0.366,  // 366mm  
-        depth: 0.212    // 212mm equipment depth
+        depth: ENERGY_STORAGE_UNIT_DEPTH
       },
       color: '#D3D3D3'  // light gray
     },
     battery: {
       model: 'SMILE-G3-BAT-3.8S',
       dimensions: {
-        width: 0.610,   // 610mm
+        width: ENERGY_STORAGE_UNIT_WIDTH,
         height: 0.435,  // 435mm
-        depth: 0.212    // 212mm equipment depth
+        depth: ENERGY_STORAGE_UNIT_DEPTH
       },
       color: '#F5F5F5'  // white
     },

@@ -62,3 +62,56 @@ If the app doesn't load resources:
 ## Architecture
 
 The application follows a modular architecture with separate services for coordinate transformation and panel spacing calculations. The 3D scene is rendered using React Three Fiber with real-time shadow casting and camera controls.
+
+## Construction Notes
+
+### Panlat Connection Methods (22×48mm to 50×50mm main frame)
+
+For connecting KONSTA Vuren panlat beams to the main wooden frame, here are 5 practical methods:
+
+**1. Metal angle brackets:**
+- Small 90° brackets screwed to both the main beam and panlat
+- Hidden behind the panlat, won't interfere with rabat mounting
+- Clean, professional look
+
+**2. Long screws at an angle:**
+- 80-100mm screws driven at 45° through the panlat into the main beam
+- Pre-drill to avoid splitting
+- Countersink so heads are flush
+
+**3. Construction adhesive + screws:**
+- Strong polyurethane adhesive on contact surfaces
+- Plus a few screws for clamping while it cures
+- Very strong permanent bond
+
+**4. Pocket screws:**
+- Use a Kreg jig to drill angled holes through the panlat
+- Screws go into the main beam at angle
+- Very strong connection, holes are hidden
+
+**5. French cleats:**
+- Small wooden cleats screwed to both pieces
+- Allows easy removal if needed later
+- Good for temporary or adjustable installations
+
+**Recommended:** Method #1 (metal brackets) or #3 (adhesive + screws) for best strength and durability.
+
+### Wooden Shell Roof Beam Cutting Angles
+
+For the pitched roof construction, the following sawing angles are required:
+
+**Roof Beams (50×50mm):**
+- **Bottom cut:** 30° angle cut to sit on horizontal frame beams
+- **Top cut:** 60° angle cut at the ridge end
+- **Geometry check:** 30° + 30° + 120° = 180° (the 120° peak angle is formed by two 60° cuts meeting)
+
+**Ridge Beam (50×50mm):**
+- **Standard cuts:** Square cuts at both ends
+- **Length:** Full depth of shell frame (310mm)
+
+**Construction Notes:**
+- Use a miter saw set to 30° for bottom cuts
+- Use a miter saw set to 60° for top cuts at ridge
+- The two roof beams meeting at ridge will form a 120° angle
+- Pre-drill pilot holes to prevent splitting
+- All cuts should be made with the beam lying flat for safety
