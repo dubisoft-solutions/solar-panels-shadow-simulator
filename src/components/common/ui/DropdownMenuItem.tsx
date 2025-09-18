@@ -5,9 +5,10 @@ interface DropdownMenuItemProps {
   href?: string
   disabled?: boolean
   onClick?: () => void
+  isActive?: boolean
 }
 
-export function DropdownMenuItem({ label, href, disabled, onClick }: DropdownMenuItemProps) {
+export function DropdownMenuItem({ label, href, disabled, onClick, isActive }: DropdownMenuItemProps) {
   const handleClick = (event: React.MouseEvent) => {
     // Find the parent <details> element and close it
     const detailsElement = (event.target as HTMLElement).closest('details')
@@ -29,14 +30,21 @@ export function DropdownMenuItem({ label, href, disabled, onClick }: DropdownMen
 
   if (href) {
     return (
-      <Link href={href} onClick={handleClick}>
+      <Link
+        href={href}
+        onClick={handleClick}
+        className={isActive ? 'text-primary font-semibold' : ''}
+      >
         {label}
       </Link>
     )
   }
 
   return (
-    <button onClick={handleClick} className="w-full text-left">
+    <button
+      onClick={handleClick}
+      className={`w-full text-left ${isActive ? 'text-primary font-semibold' : ''}`}
+    >
       {label}
     </button>
   )

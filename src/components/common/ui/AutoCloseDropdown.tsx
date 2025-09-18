@@ -14,8 +14,8 @@ export function AutoCloseDropdown({
   contentClassName = 'p-2 bg-base-100 rounded-t-none w-48'
 }: AutoCloseDropdownProps) {
   return (
-    <details className={className}>
-      <summary>{trigger}</summary>
+    <details>
+      <summary className={className}>{trigger}</summary>
       <ul className={contentClassName}>
         {children}
       </ul>

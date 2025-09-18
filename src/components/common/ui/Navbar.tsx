@@ -5,9 +5,11 @@ import Link from 'next/link'
 import logo from '@/assets/images/logo.png'
 import { AutoCloseDropdown } from './AutoCloseDropdown'
 import { DropdownMenuItem } from './DropdownMenuItem'
+import { useNavigationState } from '@/hooks/useNavigationState'
+import type { MenuItem } from '@/types/navigation'
 
 // Define menu items once to avoid duplication
-const menuItems = [
+const menuItems: MenuItem[] = [
   { label: 'Home', href: '/' },
   {
     label: 'House',
@@ -21,6 +23,8 @@ const menuItems = [
 ]
 
 export default function Navbar() {
+  const navigation = useNavigationState()
+
   return (
     <div className="navbar bg-base-100 shadow-md fixed top-0 left-0 right-0 z-50">
       <div className="flex-none">
@@ -43,27 +47,39 @@ export default function Navbar() {
       {/* Desktop menu */}
       <div className="flex-none flex items-center">
         <ul className="menu menu-horizontal px-1 hidden lg:flex">
-          {menuItems.map((item, index) => (
-            <li key={index}>
-              {item.submenu ? (
-                <AutoCloseDropdown trigger={item.label}>
-                  {item.submenu.map((subItem, subIndex) => (
-                    <li key={subIndex}>
-                      <DropdownMenuItem
-                        label={subItem.label}
-                        href={subItem.href}
-                        disabled={subItem.disabled}
-                      />
-                    </li>
-                  ))}
-                </AutoCloseDropdown>
-              ) : item.disabled ? (
-                <span className="text-base-content/50 cursor-not-allowed">{item.label}</span>
-              ) : (
-                <Link href={item.href!}>{item.label}</Link>
-              )}
-            </li>
-          ))}
+          {menuItems.map((item, index) => {
+            const itemIsActive = navigation.isActive(item.href) || navigation.isAnySubItemActive(item.submenu)
+            return (
+              <li key={index}>
+                {item.submenu ? (
+                  <AutoCloseDropdown
+                    trigger={item.label}
+                    className={itemIsActive ? 'text-primary font-semibold' : ''}
+                  >
+                    {item.submenu.map((subItem, subIndex) => (
+                      <li key={subIndex}>
+                        <DropdownMenuItem
+                          label={subItem.label}
+                          href={subItem.href}
+                          disabled={subItem.disabled}
+                          isActive={navigation.isActive(subItem.href)}
+                        />
+                      </li>
+                    ))}
+                  </AutoCloseDropdown>
+                ) : item.disabled ? (
+                  <span className="text-base-content/50 cursor-not-allowed">{item.label}</span>
+                ) : (
+                  <Link
+                    href={item.href!}
+                    className={itemIsActive ? 'text-primary font-semibold' : ''}
+                  >
+                    {item.label}
+                  </Link>
+                )}
+              </li>
+            )
+          })}
         </ul>
 
         {/* Mobile dropdown */}
@@ -74,27 +90,40 @@ export default function Navbar() {
             </svg>
           </div>
           <ul tabIndex={0} className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
-            {menuItems.map((item, index) => (
-              <li key={index}>
-                {item.submenu ? (
-                  <AutoCloseDropdown trigger={item.label} contentClassName="p-2">
-                    {item.submenu.map((subItem, subIndex) => (
-                      <li key={subIndex}>
-                        <DropdownMenuItem
-                          label={subItem.label}
-                          href={subItem.href}
-                          disabled={subItem.disabled}
-                        />
-                      </li>
-                    ))}
-                  </AutoCloseDropdown>
-                ) : item.disabled ? (
-                  <span className="text-base-content/50 cursor-not-allowed">{item.label}</span>
-                ) : (
-                  <Link href={item.href!}>{item.label}</Link>
-                )}
-              </li>
-            ))}
+            {menuItems.map((item, index) => {
+              const itemIsActive = navigation.isActive(item.href) || navigation.isAnySubItemActive(item.submenu)
+              return (
+                <li key={index}>
+                  {item.submenu ? (
+                    <AutoCloseDropdown
+                      trigger={item.label}
+                      contentClassName="p-2"
+                      className={itemIsActive ? 'text-primary font-semibold' : ''}
+                    >
+                      {item.submenu.map((subItem, subIndex) => (
+                        <li key={subIndex}>
+                          <DropdownMenuItem
+                            label={subItem.label}
+                            href={subItem.href}
+                            disabled={subItem.disabled}
+                            isActive={navigation.isActive(subItem.href)}
+                          />
+                        </li>
+                      ))}
+                    </AutoCloseDropdown>
+                  ) : item.disabled ? (
+                    <span className="text-base-content/50 cursor-not-allowed">{item.label}</span>
+                  ) : (
+                    <Link
+                      href={item.href!}
+                      className={itemIsActive ? 'text-primary font-semibold' : ''}
+                    >
+                      {item.label}
+                    </Link>
+                  )}
+                </li>
+              )
+            })}
           </ul>
         </div>
       </div>
