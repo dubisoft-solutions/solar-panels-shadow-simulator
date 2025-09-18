@@ -11,7 +11,7 @@ const menuItems = [
     submenu: [
       { label: 'Shadow Simulator', href: '/'},
       { label: 'Specifications', href: '/specifications', disabled: true },
-      { label: 'Energy System', href: '/energy-system', disabled: true },
+      { label: 'Energy System Shell', href: '/energy-system-shell'},
     ]
   },
   { label: 'Simulations', disabled: true },
