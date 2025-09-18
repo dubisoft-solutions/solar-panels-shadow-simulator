@@ -8,10 +8,10 @@ import { DropdownMenuItem } from './DropdownMenuItem'
 
 // Define menu items once to avoid duplication
 const menuItems = [
+  { label: 'Home', href: '/' },
   {
     label: 'House',
     submenu: [
-      { label: 'Shadow Simulator', href: '/'},
       { label: 'Specifications', href: '/specifications', disabled: true },
       { label: 'Energy System Shell', href: '/energy-system-shell'},
     ]
@@ -25,7 +25,7 @@ export default function Navbar() {
     <div className="navbar bg-base-100 shadow-md fixed top-0 left-0 right-0 z-50">
       <div className="flex-none">
         {/* Logo */}
-        <Link href="/" className="btn btn-ghost">
+        <Link href="/" className="block p-2">
           <Image
             src={logo}
             alt="Logo"
