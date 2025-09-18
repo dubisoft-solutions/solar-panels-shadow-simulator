@@ -2,39 +2,11 @@
 
 import { useRef } from 'react'
 import * as THREE from 'three'
-import { houseSettings } from '@/config/houseSettings'
+import { WoodenShellProps } from '@/interfaces/WoodenShellTypes'
 
-const BEAM_SIZE = 0.05 // 50mm x 50mm wooden beams
-const PANLAT_WIDTH = 0.022 // 22mm KONSTA Vuren panlat
-const PANLAT_DEPTH = 0.048 // 48mm KONSTA Vuren panlat (depth into the shell)
-const SHELL_PADDING = {
-  sides: 0.20, // 20cm padding on sides
-  front: 0.05, // 5cm padding in front
-  top: 0.20    // 20cm padding on top/bottom
-}
-
-export default function WoodenShell() {
+export default function WoodenShell({ configuration, materials }: WoodenShellProps) {
   const groupRef = useRef<THREE.Group>(null)
-  
-  // Get energy storage configuration
-  const { energyStorage } = houseSettings
-  const { position, batteryCount, battery, inverter, mounting } = energyStorage
-  
-  // Calculate shell dimensions based on energy storage unit size
-  const shellWidth = inverter.dimensions.width + SHELL_PADDING.sides * 2
-  const shellDepth = inverter.dimensions.depth + mounting.wallOffset + SHELL_PADDING.front
-  
-  // Calculate height: inverter + batteries + padding
-  const totalBatteriesHeight = battery.dimensions.height * batteryCount
-  const shellHeight = inverter.dimensions.height + totalBatteriesHeight + SHELL_PADDING.top * 2
-  
-  // Calculate shell position - moved 1 meter forward from the house for visual debugging
-  // The shell enclosure surrounds the battery with padding on all sides
-  const shellPosition = [
-    position.x + inverter.dimensions.width / 2,  // Center X on battery
-    position.y + shellHeight / 2 - SHELL_PADDING.top,  // Center Y accounting for base height
-    position.z - (mounting.wallOffset + inverter.dimensions.depth) / 2 - SHELL_PADDING.front / 2 // - 5.0  // Center Z with front padding + 1m forward
-  ] as [number, number, number]
+  const { position, shellDimensions, beamSize, panlatSpecs, padding } = configuration
   
   // Create wood grain textures using canvas
   const createWoodTexture = (width: number, height: number, grainDirection: 'horizontal' | 'vertical' | 'depth') => {
@@ -83,21 +55,30 @@ export default function WoodenShell() {
     return texture
   }
 
-  // Create beam materials with wood grain
-  const mainBeamTexture = createWoodTexture(64, 64, 'vertical') // Main beams run vertically
-  const panlatTextureH = createWoodTexture(64, 64, 'horizontal') // Panlat horizontal grain
-  const panlatTextureV = createWoodTexture(64, 64, 'vertical') // Panlat vertical grain
-  
-  const mainBeamMaterial = <meshLambertMaterial map={mainBeamTexture} color="#D2B48C" /> // Light tan for main frame
-  const panlatMaterialH = <meshLambertMaterial map={panlatTextureH} color="#F5DEB3" /> // Wheat color for horizontal beams
-  const panlatMaterialV = <meshLambertMaterial map={panlatTextureV} color="#F5DEB3" /> // Wheat color for vertical beams
+  // Create default materials if not provided
+  const defaultMaterials = {
+    mainBeam: (() => {
+      const mainBeamTexture = createWoodTexture(64, 64, 'vertical')
+      return <meshLambertMaterial map={mainBeamTexture} color="#D2B48C" />
+    })(),
+    panlatH: (() => {
+      const panlatTextureH = createWoodTexture(64, 64, 'horizontal')
+      return <meshLambertMaterial map={panlatTextureH} color="#F5DEB3" />
+    })(),
+    panlatV: (() => {
+      const panlatTextureV = createWoodTexture(64, 64, 'vertical')
+      return <meshLambertMaterial map={panlatTextureV} color="#F5DEB3" />
+    })()
+  }
+
+  const activeMaterials = { ...defaultMaterials, ...materials }
   
   // Helper function to create a beam
   const createBeam = (
-    position: [number, number, number], 
+    position: [number, number, number],
     size: [number, number, number],
     key: string,
-    material = mainBeamMaterial
+    material = activeMaterials.mainBeam
   ) => (
     <mesh key={key} position={position} castShadow receiveShadow>
       <boxGeometry args={size} />
@@ -115,17 +96,17 @@ export default function WoodenShell() {
   ) => {
     // Create a shape for the beam cross-section with angled bottom cut
     const shape = new THREE.Shape()
-    const halfBeam = BEAM_SIZE / 2
+    const halfBeam = beamSize / 2
     
     // Create cross-section profile (looking down the length of the beam)
     shape.moveTo(-halfBeam, -halfBeam)
-    shape.lineTo(halfBeam, -halfBeam + Math.tan(cutAngle) * BEAM_SIZE) // Angled bottom
+    shape.lineTo(halfBeam, -halfBeam + Math.tan(cutAngle) * beamSize) // Angled bottom
     shape.lineTo(halfBeam, halfBeam)
     shape.lineTo(-halfBeam, halfBeam)
     shape.closePath()
-    
+
     const extrudeSettings = {
-      depth: BEAM_SIZE, // Extrude along Z-axis for beam depth (50mm)
+      depth: beamSize, // Extrude along Z-axis for beam depth (50mm)
       bevelEnabled: false
     }
     
@@ -138,204 +119,204 @@ export default function WoodenShell() {
         receiveShadow
       >
         <extrudeGeometry args={[shape, extrudeSettings]} />
-        {mainBeamMaterial}
+        {activeMaterials.mainBeam}
       </mesh>
     )
   }
-  
+
   // Calculate beam positions relative to shell center
-  const halfWidth = shellWidth / 2
-  const halfHeight = shellHeight / 2
-  const halfDepth = shellDepth / 2
+  const halfWidth = shellDimensions.width / 2
+  const halfHeight = shellDimensions.height / 2
+  const halfDepth = shellDimensions.depth / 2
   
   // Roof calculations
   const roofAngle = 20 * Math.PI / 180 // 20 degrees in radians
   const roofHeight = halfWidth * Math.tan(roofAngle) // Height of roof peak from top of frame
   // Adjust beam length to meet at ridge without overlapping (account for half beam thickness at peak)
-  const roofBeamLength = (halfWidth - BEAM_SIZE/2) / Math.cos(roofAngle) // Length of angled roof beam
-  
+  const roofBeamLength = (halfWidth - beamSize/2) / Math.cos(roofAngle) // Length of angled roof beam
+
   // Panlat calculations - run from bottom beam top to top beam bottom
-  const panlatHeight = shellHeight - BEAM_SIZE * 2 // Height between top and bottom horizontal beams
-  
+  const panlatHeight = shellDimensions.height - beamSize * 2 // Height between top and bottom horizontal beams
+
   return (
-    <group ref={groupRef} position={shellPosition}>
+    <group ref={groupRef} position={[position.x, position.y, position.z]}>
       {/* Vertical corner posts - 4 corners */}
       {createBeam(
-        [-halfWidth + BEAM_SIZE/2, 0, -halfDepth + BEAM_SIZE/2],
-        [BEAM_SIZE, shellHeight, BEAM_SIZE],
+        [-halfWidth + beamSize/2, 0, -halfDepth + beamSize/2],
+        [beamSize, shellDimensions.height, beamSize],
         'post-front-left'
       )}
       {createBeam(
-        [halfWidth - BEAM_SIZE/2, 0, -halfDepth + BEAM_SIZE/2],
-        [BEAM_SIZE, shellHeight, BEAM_SIZE],
+        [halfWidth - beamSize/2, 0, -halfDepth + beamSize/2],
+        [beamSize, shellDimensions.height, beamSize],
         'post-front-right'
       )}
       {createBeam(
-        [-halfWidth + BEAM_SIZE/2, 0, halfDepth - BEAM_SIZE/2],
-        [BEAM_SIZE, shellHeight, BEAM_SIZE],
+        [-halfWidth + beamSize/2, 0, halfDepth - beamSize/2],
+        [beamSize, shellDimensions.height, beamSize],
         'post-back-left'
       )}
       {createBeam(
-        [halfWidth - BEAM_SIZE/2, 0, halfDepth - BEAM_SIZE/2],
-        [BEAM_SIZE, shellHeight, BEAM_SIZE],
+        [halfWidth - beamSize/2, 0, halfDepth - beamSize/2],
+        [beamSize, shellDimensions.height, beamSize],
         'post-back-right'
       )}
       
       {/* Horizontal top beams - front and back (connecting between vertical posts) */}
       {createBeam(
-        [0, halfHeight - BEAM_SIZE/2, -halfDepth + BEAM_SIZE/2],
-        [shellWidth - BEAM_SIZE * 2, BEAM_SIZE, BEAM_SIZE],
+        [0, halfHeight - beamSize/2, -halfDepth + beamSize/2],
+        [shellDimensions.width - beamSize * 2, beamSize, beamSize],
         'beam-top-front'
       )}
       {createBeam(
-        [0, halfHeight - BEAM_SIZE/2, halfDepth - BEAM_SIZE/2],
-        [shellWidth - BEAM_SIZE * 2, BEAM_SIZE, BEAM_SIZE],
+        [0, halfHeight - beamSize/2, halfDepth - beamSize/2],
+        [shellDimensions.width - beamSize * 2, beamSize, beamSize],
         'beam-top-back'
       )}
       
       {/* Horizontal top beams - left and right (connecting between vertical posts) */}
       {createBeam(
-        [-halfWidth + BEAM_SIZE/2, halfHeight - BEAM_SIZE/2, 0],
-        [BEAM_SIZE, BEAM_SIZE, shellDepth - BEAM_SIZE * 2],
+        [-halfWidth + beamSize/2, halfHeight - beamSize/2, 0],
+        [beamSize, beamSize, shellDimensions.depth - beamSize * 2],
         'beam-top-left'
       )}
       {createBeam(
-        [halfWidth - BEAM_SIZE/2, halfHeight - BEAM_SIZE/2, 0],
-        [BEAM_SIZE, BEAM_SIZE, shellDepth - BEAM_SIZE * 2],
+        [halfWidth - beamSize/2, halfHeight - beamSize/2, 0],
+        [beamSize, beamSize, shellDimensions.depth - beamSize * 2],
         'beam-top-right'
       )}
       
       {/* Horizontal bottom beams - front and back (connecting between vertical posts) */}
       {createBeam(
-        [0, -halfHeight + BEAM_SIZE/2, -halfDepth + BEAM_SIZE/2],
-        [shellWidth - BEAM_SIZE * 2, BEAM_SIZE, BEAM_SIZE],
+        [0, -halfHeight + beamSize/2, -halfDepth + beamSize/2],
+        [shellDimensions.width - beamSize * 2, beamSize, beamSize],
         'beam-bottom-front'
       )}
       {createBeam(
-        [0, -halfHeight + BEAM_SIZE/2, halfDepth - BEAM_SIZE/2],
-        [shellWidth - BEAM_SIZE * 2, BEAM_SIZE, BEAM_SIZE],
+        [0, -halfHeight + beamSize/2, halfDepth - beamSize/2],
+        [shellDimensions.width - beamSize * 2, beamSize, beamSize],
         'beam-bottom-back'
       )}
       
       {/* Horizontal bottom beams - left and right (connecting between vertical posts) */}
       {createBeam(
-        [-halfWidth + BEAM_SIZE/2, -halfHeight + BEAM_SIZE/2, 0],
-        [BEAM_SIZE, BEAM_SIZE, shellDepth - BEAM_SIZE * 2],
+        [-halfWidth + beamSize/2, -halfHeight + beamSize/2, 0],
+        [beamSize, beamSize, shellDimensions.depth - beamSize * 2],
         'beam-bottom-left'
       )}
       {createBeam(
-        [halfWidth - BEAM_SIZE/2, -halfHeight + BEAM_SIZE/2, 0],
-        [BEAM_SIZE, BEAM_SIZE, shellDepth - BEAM_SIZE * 2],
+        [halfWidth - beamSize/2, -halfHeight + beamSize/2, 0],
+        [beamSize, beamSize, shellDimensions.depth - beamSize * 2],
         'beam-bottom-right'
       )}
       
       {/* Roof frame */}
       {/* Ridge beam - running along the peak */}
       {createBeam(
-        [0, halfHeight + roofHeight - BEAM_SIZE/2, 0],
-        [BEAM_SIZE, BEAM_SIZE, shellDepth],
+        [0, halfHeight + roofHeight - beamSize/2, 0],
+        [beamSize, beamSize, shellDimensions.depth],
         'roof-ridge'
       )}
       
       {/* Left roof beam - wider to simulate angled cut, positioned lower */}
       <mesh 
-        position={[-(halfWidth - BEAM_SIZE/2)/2, halfHeight + roofHeight/2 - BEAM_SIZE/2 - 0.01, -halfDepth + BEAM_SIZE/2]}
+        position={[-(halfWidth - beamSize/2)/2, halfHeight + roofHeight/2 - beamSize/2 - 0.01, -halfDepth + beamSize/2]}
         rotation={[0, 0, roofAngle]}
         castShadow 
         receiveShadow
       >
-        <boxGeometry args={[roofBeamLength + 0.02, BEAM_SIZE * 1.4, BEAM_SIZE]} />
-        {mainBeamMaterial}
+        <boxGeometry args={[roofBeamLength + 0.02, beamSize * 1.4, beamSize]} />
+        {activeMaterials.mainBeam}
       </mesh>
       
       {/* Right roof beam - wider to simulate angled cut, positioned lower */}
       <mesh 
-        position={[(halfWidth - BEAM_SIZE/2)/2, halfHeight + roofHeight/2 - BEAM_SIZE/2 - 0.01, -halfDepth + BEAM_SIZE/2]}
+        position={[(halfWidth - beamSize/2)/2, halfHeight + roofHeight/2 - beamSize/2 - 0.01, -halfDepth + beamSize/2]}
         rotation={[0, 0, -roofAngle]}
         castShadow 
         receiveShadow
       >
-        <boxGeometry args={[roofBeamLength + 0.02, BEAM_SIZE * 1.4, BEAM_SIZE]} />
-        {mainBeamMaterial}
+        <boxGeometry args={[roofBeamLength + 0.02, beamSize * 1.4, beamSize]} />
+        {activeMaterials.mainBeam}
       </mesh>
       
       {/* Back left roof beam - wider to simulate angled cut, positioned lower */}
       <mesh 
-        position={[-(halfWidth - BEAM_SIZE/2)/2, halfHeight + roofHeight/2 - BEAM_SIZE/2 - 0.01, halfDepth - BEAM_SIZE/2]}
+        position={[-(halfWidth - beamSize/2)/2, halfHeight + roofHeight/2 - beamSize/2 - 0.01, halfDepth - beamSize/2]}
         rotation={[0, 0, roofAngle]}
         castShadow 
         receiveShadow
       >
-        <boxGeometry args={[roofBeamLength + 0.02, BEAM_SIZE * 1.4, BEAM_SIZE]} />
-        {mainBeamMaterial}
+        <boxGeometry args={[roofBeamLength + 0.02, beamSize * 1.4, beamSize]} />
+        {activeMaterials.mainBeam}
       </mesh>
       
       {/* Back right roof beam - wider to simulate angled cut, positioned lower */}
       <mesh 
-        position={[(halfWidth - BEAM_SIZE/2)/2, halfHeight + roofHeight/2 - BEAM_SIZE/2 - 0.01, halfDepth - BEAM_SIZE/2]}
+        position={[(halfWidth - beamSize/2)/2, halfHeight + roofHeight/2 - beamSize/2 - 0.01, halfDepth - beamSize/2]}
         rotation={[0, 0, -roofAngle]}
         castShadow 
         receiveShadow
       >
-        <boxGeometry args={[roofBeamLength + 0.02, BEAM_SIZE * 1.4, BEAM_SIZE]} />
-        {mainBeamMaterial}
+        <boxGeometry args={[roofBeamLength + 0.02, beamSize * 1.4, beamSize]} />
+        {activeMaterials.mainBeam}
       </mesh>
       
       {/* KONSTA Vuren Panlat beams for Zweeds rabat mounting */}
       {/* Front side panlat - left (48mm face toward camera) */}
       {createBeam(
-        [-halfWidth + BEAM_SIZE + PANLAT_DEPTH/2, 0, -halfDepth + BEAM_SIZE/2 + PANLAT_WIDTH/2],
-        [PANLAT_DEPTH, panlatHeight, PANLAT_WIDTH],
+        [-halfWidth + beamSize + panlatSpecs.depth/2, 0, -halfDepth + beamSize/2 + panlatSpecs.width/2],
+        [panlatSpecs.depth, panlatHeight, panlatSpecs.width],
         'panlat-front-left',
-        panlatMaterialV
+        activeMaterials.panlatV
       )}
       
       {/* Front side panlat - center (48mm face toward camera) */}
       {createBeam(
-        [0, 0, -halfDepth + BEAM_SIZE/2 + PANLAT_WIDTH/2],
-        [PANLAT_DEPTH, panlatHeight, PANLAT_WIDTH],
+        [0, 0, -halfDepth + beamSize/2 + panlatSpecs.width/2],
+        [panlatSpecs.depth, panlatHeight, panlatSpecs.width],
         'panlat-front-center',
-        panlatMaterialV
+        activeMaterials.panlatV
       )}
       
       {/* Front side panlat - right (48mm face toward camera) */}
       {createBeam(
-        [halfWidth - BEAM_SIZE - PANLAT_DEPTH/2, 0, -halfDepth + BEAM_SIZE/2 + PANLAT_WIDTH/2],
-        [PANLAT_DEPTH, panlatHeight, PANLAT_WIDTH],
+        [halfWidth - beamSize - panlatSpecs.depth/2, 0, -halfDepth + beamSize/2 + panlatSpecs.width/2],
+        [panlatSpecs.depth, panlatHeight, panlatSpecs.width],
         'panlat-front-right',
-        panlatMaterialV
+        activeMaterials.panlatV
       )}
       
       {/* Left side panlat - front (48mm face toward left side) */}
       {createBeam(
-        [-halfWidth + BEAM_SIZE/2 + PANLAT_WIDTH/2, 0, -halfDepth + BEAM_SIZE + PANLAT_DEPTH/2],
-        [PANLAT_WIDTH, panlatHeight, PANLAT_DEPTH],
+        [-halfWidth + beamSize/2 + panlatSpecs.width/2, 0, -halfDepth + beamSize + panlatSpecs.depth/2],
+        [panlatSpecs.width, panlatHeight, panlatSpecs.depth],
         'panlat-left-front',
-        panlatMaterialV
+        activeMaterials.panlatV
       )}
       
       {/* Left side panlat - back (48mm face toward left side) */}
       {createBeam(
-        [-halfWidth + BEAM_SIZE/2 + PANLAT_WIDTH/2, 0, halfDepth - BEAM_SIZE - PANLAT_DEPTH/2],
-        [PANLAT_WIDTH, panlatHeight, PANLAT_DEPTH],
+        [-halfWidth + beamSize/2 + panlatSpecs.width/2, 0, halfDepth - beamSize - panlatSpecs.depth/2],
+        [panlatSpecs.width, panlatHeight, panlatSpecs.depth],
         'panlat-left-back',
-        panlatMaterialV
+        activeMaterials.panlatV
       )}
       
       {/* Right side panlat - front (48mm face toward right side) */}
       {createBeam(
-        [halfWidth - BEAM_SIZE/2 - PANLAT_WIDTH/2, 0, -halfDepth + BEAM_SIZE + PANLAT_DEPTH/2],
-        [PANLAT_WIDTH, panlatHeight, PANLAT_DEPTH],
+        [halfWidth - beamSize/2 - panlatSpecs.width/2, 0, -halfDepth + beamSize + panlatSpecs.depth/2],
+        [panlatSpecs.width, panlatHeight, panlatSpecs.depth],
         'panlat-right-front',
-        panlatMaterialV
+        activeMaterials.panlatV
       )}
       
       {/* Right side panlat - back (48mm face toward right side) */}
       {createBeam(
-        [halfWidth - BEAM_SIZE/2 - PANLAT_WIDTH/2, 0, halfDepth - BEAM_SIZE - PANLAT_DEPTH/2],
-        [PANLAT_WIDTH, panlatHeight, PANLAT_DEPTH],
+        [halfWidth - beamSize/2 - panlatSpecs.width/2, 0, halfDepth - beamSize - panlatSpecs.depth/2],
+        [panlatSpecs.width, panlatHeight, panlatSpecs.depth],
         'panlat-right-back',
-        panlatMaterialV
+        activeMaterials.panlatV
       )}
     </group>
   )

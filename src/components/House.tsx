@@ -5,6 +5,7 @@ import * as THREE from 'three'
 import { houseSettings } from '@/config/houseSettings'
 import EnergyStorageSystem from './EnergyStorageSystem'
 import WoodenShell from './WoodenShell'
+import { WoodenShellCalculationService } from '@/services/WoodenShellCalculationService'
 
 export default function House() {
   const houseRef = useRef<THREE.Group>(null)
@@ -16,6 +17,9 @@ export default function House() {
   const depthZ = houseSettings.dimensions.westSideLength   // runs north-south
   const heightY = houseSettings.dimensions.height          // runs vertical
   const rotationFromNorth = houseSettings.orientation.rotationFromNorth * Math.PI / 180
+
+  // Calculate WoodenShell configuration
+  const shellConfig = WoodenShellCalculationService.calculateShellConfiguration(houseSettings.energyStorage)
 
   return (
     <group ref={houseRef} rotation={[0, rotationFromNorth, 0]} position={[-widthX / 2, 0, -depthZ / 2]}>
@@ -46,7 +50,7 @@ export default function House() {
       <EnergyStorageSystem />
 
       {/* Wooden Shell for battery enclosure */}
-      <WoodenShell />
+      <WoodenShell configuration={shellConfig} />
 
       {/* <mesh castShadow position={[0, houseHeight + 0.5, 0]}>
         <coneGeometry args={[Math.max(houseWidth, houseDepth) * 0.7, 1, 4]} />
