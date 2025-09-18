@@ -1,4 +1,5 @@
-import React from 'react'
+import React, { useRef, useEffect } from 'react'
+import { DropdownCoordinationService } from '@/services/dropdownCoordinationService'
 
 interface AutoCloseDropdownProps {
   trigger: React.ReactNode
@@ -13,8 +14,25 @@ export function AutoCloseDropdown({
   className = '',
   contentClassName = 'p-2 bg-base-100 rounded-t-none w-48'
 }: AutoCloseDropdownProps) {
+  const detailsRef = useRef<HTMLDetailsElement>(null)
+  const dropdownId = useRef(Math.random().toString(36))
+
+  useEffect(() => {
+    const detailsElement = detailsRef.current
+    if (!detailsElement) return
+
+    // Register this dropdown with the coordination service
+    const cleanup = DropdownCoordinationService.registerDropdown(
+      detailsElement,
+      dropdownId.current
+    )
+
+    // Return cleanup function
+    return cleanup
+  }, [])
+
   return (
-    <details>
+    <details ref={detailsRef}>
       <summary className={className}>{trigger}</summary>
       <ul className={contentClassName}>
         {children}

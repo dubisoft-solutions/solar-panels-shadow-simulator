@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { DropdownCoordinationService } from '@/services/dropdownCoordinationService'
 
 interface DropdownMenuItemProps {
   label: string
@@ -15,6 +16,9 @@ export function DropdownMenuItem({ label, href, disabled, onClick, isActive }: D
     if (detailsElement) {
       detailsElement.open = false
     }
+
+    // Also trigger global close event for any other open dropdowns
+    DropdownCoordinationService.closeAllDropdowns()
 
     // Call any additional onClick handler
     onClick?.()
