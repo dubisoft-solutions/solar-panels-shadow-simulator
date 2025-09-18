@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { houseSettings, getDisplayDimensions } from '@/config/houseSettings'
 
 interface ControlsProps {
@@ -15,23 +14,13 @@ interface ControlsProps {
 }
 
 export default function Controls({ sunPosition, connectorLength, layout, onConnectorLengthChange, onLayoutChange }: ControlsProps) {
-  const [isExpanded, setIsExpanded] = useState(false)
   const displayDimensions = getDisplayDimensions(houseSettings)
 
-
   return (
-    <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-4 w-80">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-800">House specification</h2>
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="text-gray-600 hover:text-gray-800"
-        >
-          {isExpanded ? '−' : '+'}
-        </button>
-      </div>
-
-      {isExpanded && (
+    <div className="collapse collapse-plus bg-white/90 backdrop-blur-sm rounded-lg shadow-lg absolute top-4 left-4 w-80">
+      <input type="checkbox" />
+      <div className="collapse-title text-lg font-semibold text-gray-800">House specification</div>
+      <div className="collapse-content">
         <div className="space-y-4">
 
           <div className="bg-gray-50 p-3 rounded-md">
@@ -115,7 +104,7 @@ export default function Controls({ sunPosition, connectorLength, layout, onConne
             <p>At 17:00 PM, sun should be on the LEFT (west)</p>
           </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }

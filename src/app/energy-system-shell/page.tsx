@@ -66,16 +66,19 @@ export default function EnergySystemShellPage() {
       </Canvas>
 
       {/* Info panel */}
-      <div className="absolute top-4 left-4 bg-white p-4 rounded shadow-lg">
-        <h2 className="text-lg font-bold mb-2">Energy System Shell Debug</h2>
-        <div className="text-sm space-y-1">
-          <p><strong>Shell Dimensions:</strong></p>
-          <p>Width: {debugShellConfig.shellDimensions.width.toFixed(3)}m</p>
-          <p>Height: {debugShellConfig.shellDimensions.height.toFixed(3)}m</p>
-          <p>Depth: {debugShellConfig.shellDimensions.depth.toFixed(3)}m</p>
-          <p><strong>Battery Count:</strong> {houseSettings.energyStorage.batteryCount}</p>
-          <p><strong>Inverter Model:</strong> {houseSettings.energyStorage.inverter.model}</p>
-          <p><strong>Battery Model:</strong> {houseSettings.energyStorage.battery.model}</p>
+      <div className="collapse collapse-plus bg-white/90 backdrop-blur-sm rounded-lg shadow-lg absolute top-20 left-4 w-80">
+        <input type="checkbox" />
+        <div className="collapse-title text-lg font-semibold text-gray-800">Energy System Shell Debug</div>
+        <div className="collapse-content">
+          <div className="text-sm space-y-1">
+            <p><strong>Shell Dimensions:</strong></p>
+            <p>Width: {debugShellConfig.shellDimensions.width.toFixed(3)}m</p>
+            <p>Height: {debugShellConfig.shellDimensions.height.toFixed(3)}m</p>
+            <p>Depth: {debugShellConfig.shellDimensions.depth.toFixed(3)}m</p>
+            <p><strong>Battery Count:</strong> {houseSettings.energyStorage.batteryCount}</p>
+            <p><strong>Inverter Model:</strong> {houseSettings.energyStorage.inverter.model}</p>
+            <p><strong>Battery Model:</strong> {houseSettings.energyStorage.battery.model}</p>
+          </div>
         </div>
       </div>
     </div>

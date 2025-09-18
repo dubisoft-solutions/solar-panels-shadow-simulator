@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@source "../**/*.{js,ts,jsx,tsx}";
 @plugin "daisyui";
 
 :root {
@@ -35,4 +36,9 @@ body {
 /* Helper class to set navbar offset */
 .page-with-navbar {
   --vertical-screen-offset: 4rem;
+}
+
+/* Fix DaisyUI collapse-plus icon positioning */
+.collapse-plus .collapse-title:after {
+  inset-inline-end: 1.4rem;
 }
