@@ -3,6 +3,8 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import logo from '@/assets/images/logo.png'
+import { AutoCloseDropdown } from './AutoCloseDropdown'
+import { DropdownMenuItem } from './DropdownMenuItem'
 
 // Define menu items once to avoid duplication
 const menuItems = [
@@ -44,20 +46,17 @@ export default function Navbar() {
           {menuItems.map((item, index) => (
             <li key={index}>
               {item.submenu ? (
-                <details>
-                  <summary>{item.label}</summary>
-                  <ul className="p-2 bg-base-100 rounded-t-none w-48">
-                    {item.submenu.map((subItem, subIndex) => (
-                      <li key={subIndex}>
-                        {subItem.disabled ? (
-                          <span className="text-base-content/50 cursor-not-allowed">{subItem.label}</span>
-                        ) : (
-                          <Link href={subItem.href}>{subItem.label}</Link>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                </details>
+                <AutoCloseDropdown trigger={item.label}>
+                  {item.submenu.map((subItem, subIndex) => (
+                    <li key={subIndex}>
+                      <DropdownMenuItem
+                        label={subItem.label}
+                        href={subItem.href}
+                        disabled={subItem.disabled}
+                      />
+                    </li>
+                  ))}
+                </AutoCloseDropdown>
               ) : item.disabled ? (
                 <span className="text-base-content/50 cursor-not-allowed">{item.label}</span>
               ) : (
@@ -78,20 +77,17 @@ export default function Navbar() {
             {menuItems.map((item, index) => (
               <li key={index}>
                 {item.submenu ? (
-                  <details>
-                    <summary>{item.label}</summary>
-                    <ul className="p-2">
-                      {item.submenu.map((subItem, subIndex) => (
-                        <li key={subIndex}>
-                          {subItem.disabled ? (
-                            <span className="text-base-content/50 cursor-not-allowed">{subItem.label}</span>
-                          ) : (
-                            <Link href={subItem.href}>{subItem.label}</Link>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  </details>
+                  <AutoCloseDropdown trigger={item.label} contentClassName="p-2">
+                    {item.submenu.map((subItem, subIndex) => (
+                      <li key={subIndex}>
+                        <DropdownMenuItem
+                          label={subItem.label}
+                          href={subItem.href}
+                          disabled={subItem.disabled}
+                        />
+                      </li>
+                    ))}
+                  </AutoCloseDropdown>
                 ) : item.disabled ? (
                   <span className="text-base-content/50 cursor-not-allowed">{item.label}</span>
                 ) : (
