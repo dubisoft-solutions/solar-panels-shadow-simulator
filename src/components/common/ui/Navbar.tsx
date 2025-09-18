@@ -18,7 +18,7 @@ const menuItems: MenuItem[] = [
     label: 'House',
     submenu: [
       { label: 'Specifications', href: '/specifications', disabled: true },
-      { label: 'Energy System Shell Details', href: '/energy-system-shell'},
+      { label: 'Energy System Shell', href: '/energy-system-shell'},
     ]
   },
   { label: 'Simulations', disabled: true },
