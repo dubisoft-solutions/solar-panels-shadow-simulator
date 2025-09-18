@@ -68,7 +68,7 @@ export default function EnergySystemShellPage() {
       {/* Info panel */}
       <div className="collapse collapse-plus bg-white/90 backdrop-blur-sm rounded-lg shadow-lg absolute top-20 left-4 w-80">
         <input type="checkbox" />
-        <div className="collapse-title text-lg font-semibold text-gray-800">Energy System Shell Debug</div>
+        <div className="collapse-title text-lg font-semibold text-gray-800">Energy System Shell Specs</div>
         <div className="collapse-content">
           <div className="text-sm space-y-1">
             <p><strong>Shell Dimensions:</strong></p>
