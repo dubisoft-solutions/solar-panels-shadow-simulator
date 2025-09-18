@@ -7,7 +7,7 @@ import * as SunCalc from 'suncalc'
 import { fromZonedTime, toZonedTime } from 'date-fns-tz'
 import Scene3D from './Scene3D'
 import Controls from './Controls'
-import DateTimePicker from './DateTimePicker'
+import DateTimePicker from '../ui/DateTimePicker'
 import { houseSettings } from '@/config/houseSettings'
 import { simulatorSettings } from '@/config/simulatorSettings'
 

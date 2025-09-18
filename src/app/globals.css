@@ -1,15 +1,17 @@
 @import "tailwindcss";
+@plugin "daisyui";
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --vertical-screen-offset: 0px; /* Default offset, can be overridden */
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
+  --font-mono: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,5 +24,15 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+}
+
+/* Override h-screen to use CSS variable for offset */
+.h-screen {
+  height: calc(100vh - var(--vertical-screen-offset));
+}
+
+/* Helper class to set navbar offset */
+.page-with-navbar {
+  --vertical-screen-offset: 4rem;
 }
