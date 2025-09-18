@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import * as SunCalc from 'suncalc'
 import { fromZonedTime } from 'date-fns-tz'
 import { houseSettings } from '@/config/houseSettings'
@@ -30,9 +30,10 @@ export default function DateTimePicker({
   const dragStartValue = useRef(0)
   const rememberedDate = useRef<Date>(new Date())
   const rememberedTime = useRef(0)
+  const draggableRef = useRef<HTMLDivElement>(null)
 
   // Simple drag handler with remembering initial date/time
-  const handleDrag = (clientX: number, startDrag = false) => {
+  const handleDrag = useCallback((clientX: number, startDrag = false) => {
     if (startDrag) {
       dragStartX.current = clientX
       rememberedDate.current = new Date(date)
@@ -77,14 +78,16 @@ export default function DateTimePicker({
     } else {
       // Date scrolling: 60px = 1 day (double sensitivity), but allow fractional changes during drag
       const dayChange = -movement / 60 // Don't round during drag
-      const newDate = new Date(dragStartValue.current + dayChange * 24 * 60 * 60 * 1000)
-      
-      // Only update if the change is significant enough
-      if (Math.abs(newDate.getTime() - date.getTime()) > 1000 * 60 * 60) { // 1 hour threshold
+      const newDate = new Date(rememberedDate.current)
+      newDate.setDate(newDate.getDate() + dayChange)
+
+      // Only update if the change is significant enough (more than 12 hours difference)
+      if (Math.abs(newDate.getTime() - date.getTime()) > 1000 * 60 * 60 * 12) {
         onDateChange(newDate)
+        // In day mode, preserve the current time - don't change it
       }
     }
-  }
+  }, [scaleMode, date, time, onDateChange, onTimeChange])
 
   const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
     event.preventDefault()
@@ -104,24 +107,35 @@ export default function DateTimePicker({
     document.addEventListener('mouseup', handleMouseUp)
   }
 
-  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+  const handleTouchStart = useCallback((event: TouchEvent) => {
     event.preventDefault()
     handleDrag(event.touches[0].clientX, true)
-    
+
     const handleTouchMove = (e: TouchEvent) => {
       e.preventDefault()
       handleDrag(e.touches[0].clientX)
     }
-    
+
     const handleTouchEnd = () => {
       setIsDragging(false)
       document.removeEventListener('touchmove', handleTouchMove)
       document.removeEventListener('touchend', handleTouchEnd)
     }
-    
+
     document.addEventListener('touchmove', handleTouchMove, { passive: false })
     document.addEventListener('touchend', handleTouchEnd)
-  }
+  }, [handleDrag])
+
+  // Set up touch event listener with passive: false
+  useEffect(() => {
+    const element = draggableRef.current
+    if (element) {
+      element.addEventListener('touchstart', handleTouchStart, { passive: false })
+      return () => {
+        element.removeEventListener('touchstart', handleTouchStart)
+      }
+    }
+  }, [handleTouchStart])
 
   // Generate minutes for time scale (show every minute for precision)
   const minutes = useMemo(() => {
@@ -327,10 +341,10 @@ export default function DateTimePicker({
       {/* Bottom Scale */}
       <div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-sm text-white z-10">
         <div className="h-14 flex items-center relative overflow-hidden">
-          <div 
+          <div
+            ref={draggableRef}
             className={`flex-1 relative h-full select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
             onMouseDown={handleMouseDown}
-            onTouchStart={handleTouchStart}
           >
             {scaleMode === 'time' ? (
               /* Time Scale */
