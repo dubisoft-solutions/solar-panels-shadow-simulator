@@ -52,45 +52,51 @@ function Roof({ connectorLength, layout }: { connectorLength: number; layout: 'c
         <meshLambertMaterial color={roof.color} />
       </mesh>
 
-      {/* North Parapet - shortened to avoid west corner overlap */}
+      {/* North Parapet - connects to west parapet */}
       {roof.parapet.sides.includes('north') && (() => {
+        const northParapetWidth = roof.parapet.widths.north
+        const westParapetWidth = roof.parapet.widths.west
+        const northParapetLength = roof.dimensions.width - westParapetWidth
         const parapetEdgePos = {
-          x: roof.position.x + roof.parapet.width / 2,
+          x: roof.position.x + westParapetWidth,
           y: heightY + roof.dimensions.thickness,
           z: roof.position.y
         }
         return (
-          <mesh 
-            castShadow 
-            receiveShadow 
+          <mesh
+            castShadow
+            receiveShadow
             position={CoordinateTransformationService.edgeToThreeJs(
               parapetEdgePos,
-              { width: roof.dimensions.width - roof.parapet.width, height: roof.parapet.height, depth: roof.parapet.width }
+              { width: northParapetLength, height: roof.parapet.height, depth: northParapetWidth }
             )}
           >
-            <boxGeometry args={[roof.dimensions.width - roof.parapet.width, roof.parapet.height, roof.parapet.width]} />
+            <boxGeometry args={[northParapetLength, roof.parapet.height, northParapetWidth]} />
             <meshLambertMaterial color="#CCCCCC" />
           </mesh>
         )
       })()}
       
-      {/* South Parapet - shortened to avoid west corner overlap */}
+      {/* South Parapet - connects to west parapet */}
       {roof.parapet.sides.includes('south') && (() => {
+        const southParapetWidth = roof.parapet.widths.south
+        const westParapetWidth = roof.parapet.widths.west
+        const southParapetLength = roof.dimensions.width - westParapetWidth
         const parapetEdgePos = {
-          x: roof.position.x + roof.parapet.width / 2,
+          x: roof.position.x + westParapetWidth,
           y: heightY + roof.dimensions.thickness,
-          z: roof.position.y + roof.dimensions.depth - roof.parapet.width
+          z: roof.position.y + roof.dimensions.depth - southParapetWidth
         }
         return (
-          <mesh 
-            castShadow 
-            receiveShadow 
+          <mesh
+            castShadow
+            receiveShadow
             position={CoordinateTransformationService.edgeToThreeJs(
               parapetEdgePos,
-              { width: roof.dimensions.width - roof.parapet.width, height: roof.parapet.height, depth: roof.parapet.width }
+              { width: southParapetLength, height: roof.parapet.height, depth: southParapetWidth }
             )}
           >
-            <boxGeometry args={[roof.dimensions.width - roof.parapet.width, roof.parapet.height, roof.parapet.width]} />
+            <boxGeometry args={[southParapetLength, roof.parapet.height, southParapetWidth]} />
             <meshLambertMaterial color="#CCCCCC" />
           </mesh>
         )
@@ -98,21 +104,22 @@ function Roof({ connectorLength, layout }: { connectorLength: number; layout: 'c
       
       {/* West Parapet */}
       {roof.parapet.sides.includes('west') && (() => {
+        const westParapetWidth = roof.parapet.widths.west
         const parapetEdgePos = {
           x: roof.position.x,
           y: heightY + roof.dimensions.thickness,
           z: roof.position.y
         }
         return (
-          <mesh 
-            castShadow 
-            receiveShadow 
+          <mesh
+            castShadow
+            receiveShadow
             position={CoordinateTransformationService.edgeToThreeJs(
               parapetEdgePos,
-              { width: roof.parapet.width, height: roof.parapet.height, depth: roof.dimensions.depth }
+              { width: westParapetWidth, height: roof.parapet.height, depth: roof.dimensions.depth }
             )}
           >
-            <boxGeometry args={[roof.parapet.width, roof.parapet.height, roof.dimensions.depth]} />
+            <boxGeometry args={[westParapetWidth, roof.parapet.height, roof.dimensions.depth]} />
             <meshLambertMaterial color="#CCCCCC" />
           </mesh>
         )
@@ -201,9 +208,9 @@ function RoofObjects({ connectorLength, layout }: { connectorLength: number; lay
       {(() => {
         // Edge-based position calculation (business logic)
         const installationEdgePosition = {
-          x: 0.1 + 0.15 + PANEL_SPECS.length,  // 10cm from west parapet (15cm parapet + 10cm gap)
-          y: houseHeight + roofThickness,  // house height + on roof surface  
-          z: houseSettings.roof.position.y + houseSettings.roof.dimensions.depth - 0.15 - 0.1   // at actual south edge
+          x: 0.1 + houseSettings.roof.parapet.widths.west + PANEL_SPECS.length,  // 10cm from west parapet + 10cm gap
+          y: houseHeight + roofThickness,  // house height + on roof surface
+          z: houseSettings.roof.position.y + houseSettings.roof.dimensions.depth - houseSettings.roof.parapet.widths.south - 0.1   // at actual south edge
         }
         
         return (
@@ -234,7 +241,7 @@ function RoofObjects({ connectorLength, layout }: { connectorLength: number; lay
         const swInstallationEdgePosition = {
           x: houseWidth - connectorLength - spacing.projectedDepth - 0.05,  // panels positioned based on connector length
           y: houseHeight + roofThickness,  // house height + on roof surface
-          z: 0.15 + PANEL_SPECS.length  // closed to north parapet (15cm parapet)
+          z: houseSettings.roof.parapet.widths.north + PANEL_SPECS.length  // close to north parapet
         }
         
         return (
@@ -265,7 +272,7 @@ function RoofObjects({ connectorLength, layout }: { connectorLength: number; lay
         const swInstallationEdgePosition = {
           x: houseWidth - spacing.projectedDepth - 0.05,  // panels positioned based on connector length
           y: houseHeight + roofThickness,  // house height + on roof surface
-          z: 0.15 + PANEL_SPECS.length * 2 + 0.1  // 10cm from north parapet (15cm parapet + 10cm gap)
+          z: houseSettings.roof.parapet.widths.north + PANEL_SPECS.length * 2 + 0.1  // 10cm from north parapet + 10cm gap
         }
         
         return (
@@ -296,7 +303,7 @@ function RoofObjects({ connectorLength, layout }: { connectorLength: number; lay
         const swInstallationEdgePosition = {
           x: houseWidth - connectorLength - spacing.projectedDepth - 0.05,  // panels positioned based on connector length
           y: houseHeight + roofThickness,  // house height + on roof surface
-          z: houseDepth + 0.15  // 10cm from north parapet (15cm parapet + 10cm gap)
+          z: houseDepth + houseSettings.roof.parapet.widths.south  // 10cm from north parapet (15cm parapet + 10cm gap)
         }
         
         return (
@@ -328,7 +335,7 @@ function RoofObjects({ connectorLength, layout }: { connectorLength: number; lay
         const swInstallationEdgePosition = {
           x: houseWidth - spacing.projectedDepth - 0.05,  // panels positioned based on connector length
           y: houseHeight + roofThickness,  // house height + on roof surface
-          z: 0.15 + PANEL_SPECS.length * 2 + 0.1  // 10cm from north parapet (15cm parapet + 10cm gap)
+          z: houseSettings.roof.parapet.widths.north + PANEL_SPECS.length * 2 + 0.1  // 10cm from north parapet (15cm parapet + 10cm gap)
         }
         
         return (
@@ -361,7 +368,7 @@ function RoofObjects({ connectorLength, layout }: { connectorLength: number; lay
         const swInstallationEdgePosition = {
           x: houseWidth - spacing.platformLength,
           y: houseHeight + roofThickness,  // house height + on roof surface
-          z: houseDepth + 0.15  // 10cm from north parapet (15cm parapet + 10cm gap)
+          z: houseDepth + houseSettings.roof.parapet.widths.south  // 10cm from north parapet (15cm parapet + 10cm gap)
         }
         
         return (

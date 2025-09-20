@@ -39,7 +39,12 @@ export interface RoofSettings {
   }
   parapet: {
     height: number // meters
-    width: number  // meters
+    widths: {
+      north: number  // meters
+      south: number  // meters
+      east: number   // meters
+      west: number   // meters
+    }
     sides: ('north' | 'south' | 'east' | 'west')[] // which sides have parapets
   }
   color: string
@@ -100,8 +105,12 @@ export interface HouseSettings {
   energyStorage: EnergyStorageSystem
 }
 
-const HOUSE_DEPTH = 8.71
+const HOUSE_DEPTH = 8.93
 const HOUSE_WIDTH = 5.6
+
+const ROOF_SOUTH_PARAPET_WIDTH = 0.15
+const ROOF_NORTH_PARAPET_WIDTH = 0.40
+const ROOF_WEST_PARAPET_WIDTH = 0.40
 
 const ENERGY_STORAGE_UNIT_WIDTH = 0.61
 const ENERGY_STORAGE_UNIT_DEPTH = 0.212
@@ -121,12 +130,17 @@ export const houseSettings: HouseSettings = {
     },
     dimensions: {
       width: HOUSE_WIDTH,          // same as house width (east-west)
-      depth: HOUSE_DEPTH + 0.5,          // house depth + 50cm extension (8.71 + 0.5)
+      depth: HOUSE_DEPTH + 0.62,         // house depth + 62cm extension for 9m useful space
       thickness: 0.2        // 20cm thick roof
     },
     parapet: {
       height: 0.16,         // 16cm high
-      width: 0.15,          // 15cm wide
+      widths: {
+        north: ROOF_NORTH_PARAPET_WIDTH,
+        south: ROOF_SOUTH_PARAPET_WIDTH,
+        east: 0,              // no parapet on east side
+        west: ROOF_WEST_PARAPET_WIDTH
+      },
       sides: ['north', 'west', 'south']  // no parapet on east side
     },
     color: '#FFFFFF'        // white color for better shadow visibility
@@ -207,11 +221,18 @@ export const getDisplayDimensions = (settings: HouseSettings) => {
   const { westSideLength, northSideLength, height } = settings.dimensions
   const { units } = settings.display
   const { rotationFromNorth } = settings.orientation
-  
+
+  // Calculate useful roof space (total roof depth minus parapet widths)
+  const totalRoofDepth = settings.roof.dimensions.depth
+  const usefulRoofDepth = totalRoofDepth - settings.roof.parapet.widths.north - settings.roof.parapet.widths.south
+  const usefulRoofWidth = settings.roof.dimensions.width - settings.roof.parapet.widths.west
+
   return {
     westSide: `${westSideLength}${units === 'meters' ? 'm' : 'ft'}`,
     northSide: `${northSideLength}${units === 'meters' ? 'm' : 'ft'}`,
     height: `${height}${units === 'meters' ? 'm' : 'ft'}`,
-    rotation: `${rotationFromNorth}° from North`
+    rotation: `${rotationFromNorth}° from North`,
+    totalRoofDepth: `${totalRoofDepth.toFixed(2)}${units === 'meters' ? 'm' : 'ft'}`,
+    usefulRoofSpace: `${usefulRoofWidth.toFixed(2)}m × ${usefulRoofDepth.toFixed(1)}m`
   }
 }

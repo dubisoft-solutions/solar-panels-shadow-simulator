@@ -52,6 +52,8 @@ export default function Controls({ sunPosition, connectorLength, layout, onConne
               <p>North side: {displayDimensions.northSide}</p>
               <p>Height: {displayDimensions.height}</p>
               <p>Rotation: {displayDimensions.rotation}</p>
+              <p>Total roof: {displayDimensions.totalRoofDepth}</p>
+              <p>Useful roof space: {displayDimensions.usefulRoofSpace}</p>
               <p>Location: {houseSettings.location.city}, {houseSettings.location.country}</p>
             </div>
           </div>
