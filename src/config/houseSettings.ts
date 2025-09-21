@@ -134,7 +134,7 @@ export const houseSettings: HouseSettings = {
       thickness: 0.2        // 20cm thick roof
     },
     parapet: {
-      height: 0.16,         // 16cm high
+      height: 0.10,         // 10cm high
       widths: {
         north: ROOF_NORTH_PARAPET_WIDTH,
         south: ROOF_SOUTH_PARAPET_WIDTH,
@@ -170,7 +170,7 @@ export const houseSettings: HouseSettings = {
       dimensions: {
         width: 0.46,   // 46cm
         depth: 0.46,   // 46cm
-        height: 0.40   // 40cm
+        height: 0.42   // 40cm
       },
       pipe: {
         diameter: 0.1,  // 10cm
