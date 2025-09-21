@@ -13,6 +13,7 @@ export const LANDSCAPE_PLATFORM_SPECS = {
   tiltAngle: 13,            // degrees
   length: 1.145,            // m
   thickness: 0.082,            // m
+  panelMountOffset: 0.15,   // m (5cm offset from platform start)
   defaultConnectorLength: 1.320  // m (configurable)
 }
 
@@ -20,6 +21,7 @@ export const PORTRAIT_PLATFORM_SPECS = {
   tiltAngle: 10,            // degrees
   length: 1.826,            // m
   thickness: 0.082,            // m
+  panelMountOffset: 0.05,   // m (5cm offset from platform start)
   defaultConnectorLength: 1.320  // m (configurable)
 }
 

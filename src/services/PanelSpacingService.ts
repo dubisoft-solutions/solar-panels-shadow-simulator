@@ -8,6 +8,7 @@ export interface PlatformSpecs {
   tiltAngle: number // Tilt angle in degrees
   length: number    // Platform length (m)
   thickness: number // Platform thickness (m)
+  panelMountOffset?: number // Panel mount offset from platform start (m)
 }
 
 export type PanelOrientation = 'landscape' | 'portrait'
@@ -20,6 +21,7 @@ export interface SpacingCalculation {
   platformLength: number   // Platform length (m)
   singleColWidth: number   // Width of a single column (m)
   platformThickness: number // Thickness of the platform (m)
+  panelMountOffset: number // Panel mount offset from platform start (m)
 }
 
 export class PanelSpacingService {
@@ -82,7 +84,8 @@ export class PanelSpacingService {
       platformLength: platformSpecs.length,
       tiltAxisDimension,
       singleColWidth: orientation === 'landscape' ? panelSpecs.length : panelSpecs.width,
-      platformThickness: platformSpecs.thickness
+      platformThickness: platformSpecs.thickness,
+      panelMountOffset: platformSpecs.panelMountOffset || 0.05
     }
   }
 

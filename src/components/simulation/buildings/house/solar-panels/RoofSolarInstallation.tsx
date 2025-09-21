@@ -52,7 +52,8 @@ export default function RoofSolarInstallation({
           dimensions={{
             length: platformDimensions.width,
             width: platformDimensions.depth,
-            thickness: platformDimensions.height
+            thickness: platformDimensions.height,
+            panelMountOffset: spacing.panelMountOffset
           }}
           orientation={orientation}
           includePanel={true}

@@ -208,9 +208,9 @@ function RoofObjects({ connectorLength, layout }: { connectorLength: number; lay
       {(() => {
         // Edge-based position calculation (business logic)
         const installationEdgePosition = {
-          x: 0.1 + houseSettings.roof.parapet.widths.west + PANEL_SPECS.length,  // 10cm from west parapet + 10cm gap
+          x: 0.28 + houseSettings.roof.parapet.widths.west + PANEL_SPECS.length,
           y: houseHeight + roofThickness,  // house height + on roof surface
-          z: houseSettings.roof.position.y + houseSettings.roof.dimensions.depth - houseSettings.roof.parapet.widths.south - 0.1   // at actual south edge
+          z: houseSettings.roof.position.y + houseSettings.roof.dimensions.depth - houseSettings.roof.parapet.widths.south - 0.5   // at actual south edge
         }
         
         return (
@@ -239,9 +239,9 @@ function RoofObjects({ connectorLength, layout }: { connectorLength: number; lay
         )
         // Edge-based position calculation for SW installation
         const swInstallationEdgePosition = {
-          x: houseWidth - connectorLength - spacing.projectedDepth - 0.05,  // panels positioned based on connector length
+          x: houseWidth - connectorLength - spacing.projectedDepth,  // panels positioned based on connector length
           y: houseHeight + roofThickness,  // house height + on roof surface
-          z: houseSettings.roof.parapet.widths.north + PANEL_SPECS.length  // close to north parapet
+          z: houseSettings.roof.parapet.widths.north + PANEL_SPECS.length + 0.2// close to north parapet
         }
         
         return (
@@ -272,7 +272,7 @@ function RoofObjects({ connectorLength, layout }: { connectorLength: number; lay
         const swInstallationEdgePosition = {
           x: houseWidth - spacing.projectedDepth - 0.05,  // panels positioned based on connector length
           y: houseHeight + roofThickness,  // house height + on roof surface
-          z: houseSettings.roof.parapet.widths.north + PANEL_SPECS.length * 2 + 0.1  // 10cm from north parapet + 10cm gap
+          z: houseSettings.roof.parapet.widths.north + PANEL_SPECS.length * 2 + 0.2  // 10cm from north parapet + 10cm gap
         }
         
         return (
@@ -301,9 +301,9 @@ function RoofObjects({ connectorLength, layout }: { connectorLength: number; lay
         )
         // Edge-based position calculation for SW installation
         const swInstallationEdgePosition = {
-          x: houseWidth - connectorLength - spacing.projectedDepth - 0.05,  // panels positioned based on connector length
+          x: houseWidth - connectorLength - spacing.projectedDepth,  // panels positioned based on connector length
           y: houseHeight + roofThickness,  // house height + on roof surface
-          z: houseDepth + houseSettings.roof.parapet.widths.south  // 10cm from north parapet (15cm parapet + 10cm gap)
+          z: houseDepth + houseSettings.roof.parapet.widths.north -0.04 // from north parapet (15cm parapet + 10cm gap)
         }
         
         return (
@@ -333,9 +333,9 @@ function RoofObjects({ connectorLength, layout }: { connectorLength: number; lay
         )
         // Edge-based position calculation for SW installation
         const swInstallationEdgePosition = {
-          x: houseWidth - spacing.projectedDepth - 0.05,  // panels positioned based on connector length
+          x: houseWidth - spacing.projectedDepth,  // panels positioned based on connector length
           y: houseHeight + roofThickness,  // house height + on roof surface
-          z: houseSettings.roof.parapet.widths.north + PANEL_SPECS.length * 2 + 0.1  // 10cm from north parapet (15cm parapet + 10cm gap)
+          z: houseSettings.roof.parapet.widths.north + PANEL_SPECS.length * 2 + 0.2  // 10cm from north parapet + 10cm gap
         }
         
         return (
@@ -366,7 +366,7 @@ function RoofObjects({ connectorLength, layout }: { connectorLength: number; lay
         )
         // Edge-based position calculation for SW installation
         const swInstallationEdgePosition = {
-          x: houseWidth - spacing.platformLength,
+          x: houseWidth - spacing.projectedDepth,
           y: houseHeight + roofThickness,  // house height + on roof surface
           z: houseDepth + houseSettings.roof.parapet.widths.south  // 10cm from north parapet (15cm parapet + 10cm gap)
         }

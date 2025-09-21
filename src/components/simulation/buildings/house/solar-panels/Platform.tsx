@@ -12,6 +12,7 @@ interface PlatformProps {
     length: number
     width: number
     thickness: number
+    panelMountOffset?: number
   }
   tiltAngle?: number
   orientation?: PanelOrientation
@@ -23,7 +24,8 @@ export function Platform({
   dimensions = {
     length: PANEL_SPECS.length,
     width: PANEL_SPECS.width,
-    thickness: 0.05
+    thickness: 0.05,
+    panelMountOffset: 0.05
   },
   tiltAngle = LANDSCAPE_PLATFORM_SPECS.tiltAngle,
   orientation = 'landscape',
@@ -47,8 +49,8 @@ export function Platform({
       </mesh>
       
       {includePanel && (
-        <SolarPanel 
-          position={[0, dimensions.thickness / 2 + rearElevation / 2 + panelDimensions.thickness / 2, -(panelDimensions.width / 2) + (dimensions.width / 2)]}
+        <SolarPanel
+          position={[0, dimensions.thickness / 2 + rearElevation / 2 + panelDimensions.thickness / 2, -(panelDimensions.width / 2) + (dimensions.width / 2) + (dimensions.panelMountOffset || 0)]}
           rotation={[tiltRadians, 0, 0]}
           orientation={orientation}
         />
