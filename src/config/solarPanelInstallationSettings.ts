@@ -31,6 +31,6 @@ export const VISUAL_SETTINGS = {
   frameColor: '#2d3436',
   cellColor: '#0f0f1a',
   stringColors: ['#ff7675', '#74b9ff', '#00b894'],
-  platformColor: '#E8E8E8',
+  platformColor: '#d4cece',
   connectorColor: '#888888'
 }
