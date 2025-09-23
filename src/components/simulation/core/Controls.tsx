@@ -1,19 +1,25 @@
 'use client'
 
 import { houseSettings, getDisplayDimensions } from '@/config/houseSettings'
+import { LayoutUIDescription, LayoutId } from '@/domain/entities/LayoutConfiguration'
+
+interface LayoutOption {
+  value: LayoutId
+  label: string
+}
 
 interface ControlsProps {
   sunPosition: {
     azimuth: number
     elevation: number
   }
-  connectorLength: number
-  layout: 'current' | 'sw-reposition' | 'sw-portrait'
-  onConnectorLengthChange: (length: number) => void
-  onLayoutChange: (layout: 'current' | 'sw-reposition' | 'sw-portrait') => void
+  layoutUIDescription: LayoutUIDescription
+  selectedLayoutId: LayoutId
+  layoutOptions: LayoutOption[]
+  onLayoutChange: (layoutId: LayoutId) => void
 }
 
-export default function Controls({ sunPosition, connectorLength, layout, onConnectorLengthChange, onLayoutChange }: ControlsProps) {
+export default function Controls({ sunPosition, layoutUIDescription, selectedLayoutId, layoutOptions, onLayoutChange }: ControlsProps) {
   const displayDimensions = getDisplayDimensions(houseSettings)
 
   return (
@@ -60,42 +66,30 @@ export default function Controls({ sunPosition, connectorLength, layout, onConne
 
           <div className="bg-green-50 p-3 rounded-md">
             <h3 className="text-sm font-medium text-gray-700 mb-2">Solar Panel Configuration</h3>
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Connector Length
-                </label>
                 <select
-                  value={connectorLength}
-                  onChange={(e) => onConnectorLengthChange(Number(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                  value={selectedLayoutId}
+                  onChange={(e) => onLayoutChange(e.target.value as LayoutId)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm font-semibold"
                 >
-                  <option value={1.320}>1320mm (Default)</option>
-                  <option value={1.500}>1500mm</option>
+                  {layoutOptions.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
-                <p className="text-xs text-gray-500 mt-1">
-                  Row pitch: {(connectorLength * 1000).toFixed(0)}mm between panel centers
-                </p>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Layout
-                </label>
-                <select
-                  value={layout}
-                  onChange={(e) => onLayoutChange(e.target.value as 'current' | 'sw-reposition' | 'sw-portrait')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-                >
-                  <option value="current">Current</option>
-                  <option value="sw-reposition">SW Reposition</option>
-                  <option value="sw-portrait">SW Portrait</option>
-                </select>
-                <p className="text-xs text-gray-500 mt-1">
-                  {layout === 'current' && 'Current layout with all panels'}
-                  {layout === 'sw-reposition' && 'SW panels will be repositioned (coming soon)'}
-                  {layout === 'sw-portrait' && 'SW panels in portrait orientation (coming soon)'}
-                </p>
+              <div className="space-y-1">
+                <div className="text-xs text-gray-600">
+                  <p>{layoutUIDescription.seInfo}</p>
+                  <p>{layoutUIDescription.swInfo}</p>
+                </div>
+
+                <div className="text-xs text-gray-500 border-t pt-2">
+                  <p>Total panels: {layoutUIDescription.totalPanels}</p>
+                </div>
               </div>
             </div>
           </div>

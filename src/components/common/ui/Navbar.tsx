@@ -39,6 +39,7 @@ export default function Navbar() {
     DropdownCoordinationService.closeAllDropdowns()
   }
 
+
   // Add keyboard event handler for accessibility (Escape key)
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -87,6 +88,7 @@ export default function Navbar() {
                           href={subItem.href}
                           disabled={subItem.disabled}
                           isActive={navigation.isActive(subItem.href)}
+                          onClick={undefined}
                         />
                       </li>
                     ))}
@@ -132,6 +134,7 @@ export default function Navbar() {
                             href={subItem.href}
                             disabled={subItem.disabled}
                             isActive={navigation.isActive(subItem.href)}
+                            onClick={undefined}
                           />
                         </li>
                       ))}

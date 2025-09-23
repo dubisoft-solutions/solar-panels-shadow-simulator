@@ -38,11 +38,6 @@ export function SolarPanelCells({ specs, orientation }: SolarPanelCellsProps) {
         else stringIndex = 0
       }
       
-      // Debug logging for first few cells
-      if (row < 6 && col < 2 && orientation === 'portrait') {
-        console.log(`Cell [${row}, ${col}] - stringIndex: ${stringIndex}, color: ${VISUAL_SETTINGS.stringColors[stringIndex]}`)
-      }
-      
       const x = (col * cellWidth) - (panelDimensions.length / 2) + (cellWidth / 2)
       const y = specs.thickness / 2 + cellThickness + 0.002
       const z = (row * cellHeight) - (panelDimensions.width / 2) + (cellHeight / 2)

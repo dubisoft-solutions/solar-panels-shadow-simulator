@@ -1,16 +1,5 @@
 import { ReactElement } from 'react'
-
-export interface Position3D {
-  x: number
-  y: number
-  z: number
-}
-
-export interface Dimensions3D {
-  width: number
-  height: number
-  depth: number
-}
+import { Position3D, Dimensions3D } from '@/types/common'
 
 export interface WoodenShellConfiguration {
   position: Position3D

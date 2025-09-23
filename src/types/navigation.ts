@@ -8,6 +8,7 @@ export interface MenuItem {
 export interface SubMenuItem {
   label: string
   href?: string
+  layoutId?: string  // For layout navigation
   disabled?: boolean
 }
 

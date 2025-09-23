@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import * as SunCalc from 'suncalc'
@@ -10,6 +10,10 @@ import Controls from './Controls'
 import DateTimePicker from '../ui/DateTimePicker'
 import { houseSettings } from '@/config/houseSettings'
 import { simulatorSettings } from '@/config/simulatorSettings'
+import { LayoutConfigurationService } from '@/services/LayoutConfigurationService'
+import { useLayoutFromURL } from '@/hooks/useLayoutFromURL'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { LayoutId } from '@/domain/entities/LayoutConfiguration'
 
 interface SunPosition {
   azimuth: number
@@ -17,8 +21,17 @@ interface SunPosition {
 }
 
 export default function ShadowSimulator() {
+  // Service instances
+  const layoutConfigService = useMemo(() => new LayoutConfigurationService(), [])
+
+  // Hooks
+  const selectedLayoutId = useLayoutFromURL()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // State
   const [date, setDate] = useState(() => {
-    return simulatorSettings.defaultDateTime 
+    return simulatorSettings.defaultDateTime
       ? new Date(simulatorSettings.defaultDateTime.date)
       : new Date()
   })
@@ -26,10 +39,24 @@ export default function ShadowSimulator() {
     return simulatorSettings.defaultDateTime?.time ?? 12
   })
   const [sunPosition, setSunPosition] = useState<SunPosition>({ azimuth: 180, elevation: 45 })
-  const [connectorLength, setConnectorLength] = useState(1.320)
-  const [layout, setLayout] = useState<'current' | 'sw-reposition' | 'sw-portrait'>('current')
   const [followNowTime, setFollowNowTime] = useState(true)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Derived state
+  const currentLayout3D = useMemo(() =>
+    layoutConfigService.get3DConfiguration(selectedLayoutId),
+    [selectedLayoutId, layoutConfigService]
+  )
+
+  const layoutUIDescription = useMemo(() =>
+    layoutConfigService.getUIDescription(selectedLayoutId),
+    [selectedLayoutId, layoutConfigService]
+  )
+
+  const layoutOptions = useMemo(() =>
+    layoutConfigService.getLayoutSelectOptions(),
+    [layoutConfigService]
+  )
 
   const getCurrentNetherlandsTime = useCallback(() => {
     const now = new Date()
@@ -63,6 +90,12 @@ export default function ShadowSimulator() {
     if (follow) {
       updateToCurrentTime()
     }
+  }
+
+  const handleLayoutChange = (layoutId: LayoutId) => {
+    const params = new URLSearchParams(searchParams)
+    params.set('layout', layoutId)
+    router.push(`/?${params.toString()}`)
   }
 
   const calculateSunPosition = (date: Date, timeHours: number): SunPosition => {
@@ -147,15 +180,15 @@ export default function ShadowSimulator() {
           minDistance={5}
           maxDistance={50}
         />
-        <Scene3D sunPosition={sunPosition} connectorLength={connectorLength} layout={layout} />
+        <Scene3D sunPosition={sunPosition} layout3DConfiguration={currentLayout3D} />
       </Canvas>
-      
+
       <Controls
         sunPosition={sunPosition}
-        connectorLength={connectorLength}
-        layout={layout}
-        onConnectorLengthChange={setConnectorLength}
-        onLayoutChange={setLayout}
+        layoutUIDescription={layoutUIDescription}
+        selectedLayoutId={selectedLayoutId}
+        layoutOptions={layoutOptions}
+        onLayoutChange={handleLayoutChange}
       />
       
       <DateTimePicker

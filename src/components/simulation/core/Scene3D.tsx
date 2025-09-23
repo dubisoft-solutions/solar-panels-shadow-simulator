@@ -6,20 +6,18 @@ import * as THREE from 'three'
 import { houseSettings } from '@/config/houseSettings'
 import RoofSolarInstallation from '../buildings/house/solar-panels/RoofSolarInstallation'
 import House from '../buildings/house/House'
-import { PANEL_SPECS, LANDSCAPE_PLATFORM_SPECS, PORTRAIT_PLATFORM_SPECS } from '@/config/solarPanelInstallationSettings'
+import { Layout3DConfiguration } from '@/domain/entities/InstallationPosition'
 import { CoordinateTransformationService } from '@/services/CoordinateTransformationService'
-import { PanelSpacingService } from '@/services/PanelSpacingService'
 
 interface Scene3DProps {
   sunPosition: {
     azimuth: number
     elevation: number
   }
-  connectorLength?: number
-  layout?: 'current' | 'sw-reposition' | 'sw-portrait'
+  layout3DConfiguration: Layout3DConfiguration
 }
 
-function Roof({ connectorLength, layout }: { connectorLength: number; layout: 'current' | 'sw-reposition' | 'sw-portrait' }) {
+function Roof({ layout3DConfiguration }: { layout3DConfiguration: Layout3DConfiguration }) {
   const houseWidthX = houseSettings.dimensions.northSideLength
   const houseDepthZ = houseSettings.dimensions.westSideLength
   const heightY = houseSettings.dimensions.height
@@ -126,28 +124,25 @@ function Roof({ connectorLength, layout }: { connectorLength: number; layout: 'c
       })()}
       
       {/* Roof Objects - now nested inside roof coordinate system */}
-      <RoofObjects connectorLength={connectorLength} layout={layout} />
+      <RoofObjects layout3DConfiguration={layout3DConfiguration} />
     </group>
   )
 }
 
-function RoofObjects({ connectorLength, layout }: { connectorLength: number; layout: 'current' | 'sw-reposition' | 'sw-portrait' }) {
+function RoofObjects({ layout3DConfiguration }: { layout3DConfiguration: Layout3DConfiguration }) {
   const roofThickness = houseSettings.roof.dimensions.thickness
   const houseHeight = houseSettings.dimensions.height
-  const houseWidth = houseSettings.dimensions.northSideLength
-  const houseDepth = houseSettings.dimensions.westSideLength
 
   return (
     <>
+      {/* Roof objects (chimneys, etc.) */}
       {houseSettings.roofObjects.map((obj) => {
-        // Edge-based position from config (business logic)
         const edgePosition = {
-          x: obj.position.x,  // distance from roof west edge
-          y: houseHeight + roofThickness + obj.position.y, // house height + above roof surface + elevation
-          z: obj.position.z   // distance from roof north edge
+          x: obj.position.x,
+          y: houseHeight + roofThickness + obj.position.y,
+          z: obj.position.z
         }
-        
-        // Transform to center-based position using service
+
         const centerPosition = CoordinateTransformationService.edgeToCenter(
           edgePosition,
           {
@@ -159,26 +154,23 @@ function RoofObjects({ connectorLength, layout }: { connectorLength: number; lay
 
         return (
           <group key={obj.id}>
-            {/* Main chimney box */}
-            <mesh 
-              castShadow 
+            <mesh
+              castShadow
               receiveShadow
               position={CoordinateTransformationService.toThreeJsPosition(centerPosition)}
             >
               <boxGeometry args={[obj.dimensions.width, obj.dimensions.height, obj.dimensions.depth]} />
               <meshLambertMaterial color={obj.color || '#8B4513'} />
             </mesh>
-            
-            {/* Chimney pipe if present */}
+
             {obj.pipe && (
               (() => {
-                // Calculate pipe position relative to chimney center
                 const pipeEdgePosition = {
                   x: edgePosition.x + obj.pipe.position.x,
                   y: edgePosition.y + obj.dimensions.height + obj.pipe.position.y,
                   z: edgePosition.z + obj.pipe.position.z
                 }
-                
+
                 const pipeCenterPosition = CoordinateTransformationService.edgeToCenter(
                   pipeEdgePosition,
                   {
@@ -187,10 +179,10 @@ function RoofObjects({ connectorLength, layout }: { connectorLength: number; lay
                     depth: obj.pipe.diameter
                   }
                 )
-                
+
                 return (
-                  <mesh 
-                    castShadow 
+                  <mesh
+                    castShadow
                     receiveShadow
                     position={CoordinateTransformationService.toThreeJsPosition(pipeCenterPosition)}
                   >
@@ -203,192 +195,19 @@ function RoofObjects({ connectorLength, layout }: { connectorLength: number; lay
           </group>
         )
       })}
-      
-      {/* SE Solar Panel Installation - using service layer for positioning */}
-      {(() => {
-        // Edge-based position calculation (business logic)
-        const installationEdgePosition = {
-          x: 0.28 + houseSettings.roof.parapet.widths.west + PANEL_SPECS.length,
-          y: houseHeight + roofThickness,  // house height + on roof surface
-          z: houseSettings.roof.position.y + houseSettings.roof.dimensions.depth - houseSettings.roof.parapet.widths.south - 0.5   // at actual south edge
-        }
-        
-        return (
-          <group 
-            position={CoordinateTransformationService.toThreeJsPosition(installationEdgePosition)}
-            rotation={[0, Math.PI, 0]}
-          >
-            <RoofSolarInstallation 
-              configuration={{
-                rows: 6,
-                columns: 1,
-                connectorLength: connectorLength
-              }}
-            />
-          </group>
-        )
-      })()}
-      
-      {/* SW 1 Solar Panel Installation - along north parapet, facing west */}
-      {layout === 'current' && (() => {
-        const spacing = PanelSpacingService.calculateSpacing(
-          PANEL_SPECS,
-          LANDSCAPE_PLATFORM_SPECS,
-          connectorLength,
-          'landscape'  // Will be configurable for portrait mode later
-        )
-        // Edge-based position calculation for SW installation
-        const swInstallationEdgePosition = {
-          x: houseWidth - connectorLength - spacing.projectedDepth,  // panels positioned based on connector length
-          y: houseHeight + roofThickness,  // house height + on roof surface
-          z: houseSettings.roof.parapet.widths.north + PANEL_SPECS.length + 0.2// close to north parapet
-        }
-        
-        return (
-          <group 
-            position={CoordinateTransformationService.toThreeJsPosition(swInstallationEdgePosition)}
-            rotation={[0, Math.PI / 2, 0]}
-          >
-            <RoofSolarInstallation 
-              configuration={{
-                rows: 2,  // 2 panels in a row
-                columns: 1,
-                connectorLength: connectorLength
-              }}
-            />
-          </group>
-        )
-      })()}
 
-      {/* SW 1 Solar Panel Installation - along north parapet, facing west */}
-      {layout === 'sw-reposition' && (() => {
-        const spacing = PanelSpacingService.calculateSpacing(
-          PANEL_SPECS,
-          LANDSCAPE_PLATFORM_SPECS,
-          connectorLength,
-          'landscape'  // Will be configurable for portrait mode later
-        )
-        // Edge-based position calculation for SW installation
-        const swInstallationEdgePosition = {
-          x: houseWidth - spacing.projectedDepth - 0.05,  // panels positioned based on connector length
-          y: houseHeight + roofThickness,  // house height + on roof surface
-          z: houseSettings.roof.parapet.widths.north + PANEL_SPECS.length * 2 + 0.2  // 10cm from north parapet + 10cm gap
-        }
-        
-        return (
-          <group 
-            position={CoordinateTransformationService.toThreeJsPosition(swInstallationEdgePosition)}
-            rotation={[0, Math.PI / 2, 0]}
-          >
-            <RoofSolarInstallation 
-              configuration={{
-                rows: 1,
-                columns: 2,
-                connectorLength: connectorLength
-              }}
-            />
-          </group>
-        )
-      })()}
-
-      {/* SW 2 Solar Panel Installation - along south parapet, facing west */}
-      {(layout === 'current' || layout === 'sw-reposition') && (() => {
-        const spacing = PanelSpacingService.calculateSpacing(
-          PANEL_SPECS,
-          LANDSCAPE_PLATFORM_SPECS,
-          connectorLength,
-          'landscape'  // Will be configurable for portrait mode later
-        )
-        // Edge-based position calculation for SW installation
-        const swInstallationEdgePosition = {
-          x: houseWidth - connectorLength - spacing.projectedDepth,  // panels positioned based on connector length
-          y: houseHeight + roofThickness,  // house height + on roof surface
-          z: houseDepth + houseSettings.roof.parapet.widths.north -0.04 // from north parapet (15cm parapet + 10cm gap)
-        }
-        
-        return (
-          <group 
-            position={CoordinateTransformationService.toThreeJsPosition(swInstallationEdgePosition)}
-            rotation={[0, Math.PI / 2, 0]}
-          >
-            <RoofSolarInstallation 
-              configuration={{
-                rows: 2,  // 2 panels in a row
-                columns: 2,
-                connectorLength: connectorLength
-              }}
-            />
-          </group>
-        )
-      })()}
-
-
-      {/* SW 1 Solar Panel Installation in portrait mode - along north parapet, facing west */}
-      {layout === 'sw-portrait' && (() => {
-        const spacing = PanelSpacingService.calculateSpacing(
-          PANEL_SPECS,
-          PORTRAIT_PLATFORM_SPECS,
-          connectorLength,
-          'portrait'  // Will be configurable for portrait mode later
-        )
-        // Edge-based position calculation for SW installation
-        const swInstallationEdgePosition = {
-          x: houseWidth - spacing.projectedDepth,  // panels positioned based on connector length
-          y: houseHeight + roofThickness,  // house height + on roof surface
-          z: houseSettings.roof.parapet.widths.north + PANEL_SPECS.length * 2 + 0.2  // 10cm from north parapet + 10cm gap
-        }
-        
-        return (
-          <group 
-            position={CoordinateTransformationService.toThreeJsPosition(swInstallationEdgePosition)}
-            rotation={[0, Math.PI / 2, 0]}
-          >
-            <RoofSolarInstallation 
-              configuration={{
-                rows: 1,
-                columns: 3,
-                connectorLength: connectorLength,
-                orientation: 'portrait'
-              }}
-            />
-          </group>
-        )
-      })()}
-
-
-      {/* SW 2 Solar Panel Installation in portrait mode - along south parapet, facing west */}
-      {(layout === 'sw-portrait') && (() => {
-        const spacing = PanelSpacingService.calculateSpacing(
-          PANEL_SPECS,
-          PORTRAIT_PLATFORM_SPECS,
-          connectorLength,
-          'portrait'  // Will be configurable for portrait mode later
-        )
-        // Edge-based position calculation for SW installation
-        const swInstallationEdgePosition = {
-          x: houseWidth - spacing.projectedDepth,
-          y: houseHeight + roofThickness,  // house height + on roof surface
-          z: houseDepth + houseSettings.roof.parapet.widths.south  // 10cm from north parapet (15cm parapet + 10cm gap)
-        }
-        
-        return (
-          <group 
-            position={CoordinateTransformationService.toThreeJsPosition(swInstallationEdgePosition)}
-            rotation={[0, Math.PI / 2, 0]}
-          >
-            <RoofSolarInstallation 
-              configuration={{
-                rows: 1,  // 1 panel in a row
-                columns: 3,
-                connectorLength: connectorLength,
-                orientation: 'portrait'
-              }}
-            />
-          </group>
-        )
-      })()}
-
-
+      {/* Solar Panel Installations - using service-provided configuration */}
+      {layout3DConfiguration.installations.map(installation => (
+        <group
+          key={installation.id}
+          position={[installation.position.x, installation.position.y, installation.position.z]}
+          rotation={installation.rotation}
+        >
+          <RoofSolarInstallation
+            configuration={installation.configuration}
+          />
+        </group>
+      ))}
     </>
   )
 }
@@ -425,7 +244,7 @@ function Compass() {
   )
 }
 
-export default function Scene3D({ sunPosition, connectorLength = 1.320, layout = 'current' }: Scene3DProps) {
+export default function Scene3D({ sunPosition, layout3DConfiguration }: Scene3DProps) {
   const lightRef = useRef<THREE.DirectionalLight>(null)
   const sunLightRef = useRef<THREE.DirectionalLight>(null)
 
@@ -489,7 +308,7 @@ export default function Scene3D({ sunPosition, connectorLength = 1.320, layout =
       {/* House and roof positioned 2m west and 2m south for better centering */}
       <group position={[-2, 0, 2]}>
         <House />
-        <Roof connectorLength={connectorLength} layout={layout} />
+        <Roof layout3DConfiguration={layout3DConfiguration} />
       </group>
       
       <Compass />
