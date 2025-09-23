@@ -13,7 +13,6 @@ export interface InstallationArea {
   id: InstallationAreaId
   rowConfigurations: RowConfiguration[]
   orientation: PanelOrientation
-  repositioned?: boolean
 }
 
 export interface LayoutConfiguration {

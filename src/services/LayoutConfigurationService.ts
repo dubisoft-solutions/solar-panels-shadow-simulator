@@ -62,7 +62,7 @@ export class LayoutConfigurationService implements ILayoutConfigurationService {
     }
 
     const installations: Installation3DConfiguration[] = layout.installations.map(installation => {
-      const position = this.getInstallationPosition(installation.id, installation.repositioned, installation)
+      const position = this.getInstallationPosition(installation.id, installation)
       const rotation = this.getInstallationRotation(installation.id)
 
       return {
@@ -130,7 +130,7 @@ export class LayoutConfigurationService implements ILayoutConfigurationService {
     }
   }
 
-  private getInstallationPosition(areaId: string, repositioned = false, installation?: InstallationArea): Position3D {
+  private getInstallationPosition(areaId: string, installation?: InstallationArea): Position3D {
     const houseHeight = houseSettings.dimensions.height
     const roofThickness = houseSettings.roof.dimensions.thickness
     const houseWidth = houseSettings.dimensions.northSideLength
@@ -165,44 +165,27 @@ export class LayoutConfigurationService implements ILayoutConfigurationService {
         }
 
       case 'sw1':
-        if (repositioned) {
-          // SW Reposition layout positioning
-          const spacing = PanelSpacingService.calculateSpacing(
-            PANEL_SPECS,
-            platformSpecs,
-            connectorLength,
-            orientation
-          )
-          return {
-            x: houseWidth - spacing.projectedDepth,
-            y: houseHeight + roofThickness,
-            z: houseSettings.roof.parapet.widths.north + spacing.singleColWidth * maxColumns + 0.2
-          }
-        } else {
-          // Current layout positioning
-          const spacing = PanelSpacingService.calculateSpacing(
-            PANEL_SPECS,
-            platformSpecs,
-            connectorLength,
-            orientation
-          )
-          return {
-            x: houseWidth - connectorLength - spacing.projectedDepth,
-            y: houseHeight + roofThickness,
-            z: houseSettings.roof.parapet.widths.north + spacing.singleColWidth * maxColumns + 0.2
-          }
-        }
-
-      case 'sw2':
-        // Current layout positioning
-        const spacing = PanelSpacingService.calculateSpacing(
+        const sw1Spacing = PanelSpacingService.calculateSpacing(
           PANEL_SPECS,
           platformSpecs,
           connectorLength,
           orientation
         )
         return {
-          x: houseWidth - connectorLength - spacing.projectedDepth,
+          x: houseWidth - connectorLength - sw1Spacing.projectedDepth,
+          y: houseHeight + roofThickness,
+          z: houseSettings.roof.parapet.widths.north + sw1Spacing.singleColWidth * maxColumns + 0.2
+        }
+
+      case 'sw2':
+        const sw2Spacing = PanelSpacingService.calculateSpacing(
+          PANEL_SPECS,
+          platformSpecs,
+          connectorLength,
+          orientation
+        )
+        return {
+          x: houseWidth - connectorLength - sw2Spacing.projectedDepth,
           y: houseHeight + roofThickness,
           z: houseDepth + houseSettings.roof.parapet.widths.north - 0.04
         }

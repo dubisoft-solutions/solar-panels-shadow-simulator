@@ -93,8 +93,7 @@ export const LAYOUT_CONFIGURATIONS: LayoutConfiguration[] = [
         rowConfigurations: [
           { columns: 2 }
         ],
-        orientation: 'landscape',
-        repositioned: true
+        orientation: 'landscape'
       },
       {
         id: 'sw2',
@@ -102,8 +101,7 @@ export const LAYOUT_CONFIGURATIONS: LayoutConfiguration[] = [
           { columns: 2, connectorLength: 1.320 },
           { columns: 2 }
         ],
-        orientation: 'landscape',
-        repositioned: true
+        orientation: 'landscape'
       }
     ]
   },
@@ -129,8 +127,7 @@ export const LAYOUT_CONFIGURATIONS: LayoutConfiguration[] = [
         rowConfigurations: [
           { columns: 2 }
         ],
-        orientation: 'landscape',
-        repositioned: true
+        orientation: 'landscape'
       },
       {
         id: 'sw2',
@@ -138,8 +135,7 @@ export const LAYOUT_CONFIGURATIONS: LayoutConfiguration[] = [
           { columns: 2, connectorLength: 1.500 },
           { columns: 2 }
         ],
-        orientation: 'landscape',
-        repositioned: true
+        orientation: 'landscape'
       }
     ]
   },
