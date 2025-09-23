@@ -1,4 +1,5 @@
 import { LayoutConfiguration, LayoutId } from '@/domain/entities/LayoutConfiguration'
+import { LANDSCAPE_PLATFORM_SPECS, PORTRAIT_PLATFORM_SPECS } from './solarPanelInstallationSettings'
 
 export const LAYOUT_CONFIGURATIONS: LayoutConfiguration[] = [
   {
@@ -16,7 +17,8 @@ export const LAYOUT_CONFIGURATIONS: LayoutConfiguration[] = [
           { columns: 1, connectorLength: 1.320 },
           { columns: 1 }
         ],
-        orientation: 'landscape'
+        positionOffset: { x: 0.28, y: 0, z: 0 },
+        platformSpecs: LANDSCAPE_PLATFORM_SPECS
       },
       {
         id: 'sw1',
@@ -24,7 +26,8 @@ export const LAYOUT_CONFIGURATIONS: LayoutConfiguration[] = [
           { columns: 1, connectorLength: 1.320 },
           { columns: 1 }
         ],
-        orientation: 'landscape'
+        positionOffset: { x: 0, y: 0, z: 0 },
+        platformSpecs: LANDSCAPE_PLATFORM_SPECS
       },
       {
         id: 'sw2',
@@ -32,7 +35,7 @@ export const LAYOUT_CONFIGURATIONS: LayoutConfiguration[] = [
           { columns: 2, connectorLength: 1.320 },
           { columns: 2 }
         ],
-        orientation: 'landscape'
+        platformSpecs: LANDSCAPE_PLATFORM_SPECS
       }
     ]
   },
@@ -51,7 +54,8 @@ export const LAYOUT_CONFIGURATIONS: LayoutConfiguration[] = [
           { columns: 1, connectorLength: 1.500 },
           { columns: 1 }
         ],
-        orientation: 'landscape'
+        positionOffset: { x: 0.28, y: 0, z: 0.11 },
+        platformSpecs: LANDSCAPE_PLATFORM_SPECS
       },
       {
         id: 'sw1',
@@ -59,7 +63,8 @@ export const LAYOUT_CONFIGURATIONS: LayoutConfiguration[] = [
           { columns: 1, connectorLength: 1.500 },
           { columns: 1 }
         ],
-        orientation: 'landscape'
+        positionOffset: { x: 0, y: 0, z: 0 },
+        platformSpecs: LANDSCAPE_PLATFORM_SPECS
       },
       {
         id: 'sw2',
@@ -67,7 +72,7 @@ export const LAYOUT_CONFIGURATIONS: LayoutConfiguration[] = [
           { columns: 2, connectorLength: 1.500 },
           { columns: 2 }
         ],
-        orientation: 'landscape'
+        platformSpecs: LANDSCAPE_PLATFORM_SPECS
       }
     ]
   },
@@ -86,14 +91,16 @@ export const LAYOUT_CONFIGURATIONS: LayoutConfiguration[] = [
           { columns: 1, connectorLength: 1.500 },
           { columns: 1 }
         ],
-        orientation: 'landscape'
+        positionOffset: { x: 0.28, y: 0, z: 0.11 },
+        platformSpecs: LANDSCAPE_PLATFORM_SPECS
       },
       {
         id: 'sw1',
         rowConfigurations: [
           { columns: 2 }
         ],
-        orientation: 'landscape'
+        positionOffset: { x: 0, y: 0, z: 0 },
+        platformSpecs: LANDSCAPE_PLATFORM_SPECS
       },
       {
         id: 'sw2',
@@ -101,7 +108,7 @@ export const LAYOUT_CONFIGURATIONS: LayoutConfiguration[] = [
           { columns: 2, connectorLength: 1.320 },
           { columns: 2 }
         ],
-        orientation: 'landscape'
+        platformSpecs: LANDSCAPE_PLATFORM_SPECS
       }
     ]
   },
@@ -120,14 +127,16 @@ export const LAYOUT_CONFIGURATIONS: LayoutConfiguration[] = [
           { columns: 1, connectorLength: 1.500 },
           { columns: 1 }
         ],
-        orientation: 'landscape'
+        positionOffset: { x: 0.28, y: 0, z: 0.11 },
+        platformSpecs: LANDSCAPE_PLATFORM_SPECS
       },
       {
         id: 'sw1',
         rowConfigurations: [
           { columns: 2 }
         ],
-        orientation: 'landscape'
+        positionOffset: { x: 0, y: 0, z: 0 },
+        platformSpecs: LANDSCAPE_PLATFORM_SPECS
       },
       {
         id: 'sw2',
@@ -135,7 +144,8 @@ export const LAYOUT_CONFIGURATIONS: LayoutConfiguration[] = [
           { columns: 2, connectorLength: 1.500 },
           { columns: 2 }
         ],
-        orientation: 'landscape'
+        positionOffset: { x: 0, y: 0, z: 0 },
+        platformSpecs: LANDSCAPE_PLATFORM_SPECS
       }
     ]
   },
@@ -154,21 +164,22 @@ export const LAYOUT_CONFIGURATIONS: LayoutConfiguration[] = [
           { columns: 1, connectorLength: 1.500 },
           { columns: 1 }
         ],
-        orientation: 'landscape'
+        positionOffset: { x: 0.28, y: 0, z: 0.11 },
+        platformSpecs: LANDSCAPE_PLATFORM_SPECS
       },
       {
         id: 'sw1',
         rowConfigurations: [
           { columns: 3 }
         ],
-        orientation: 'portrait'
+        platformSpecs: PORTRAIT_PLATFORM_SPECS
       },
       {
         id: 'sw2',
         rowConfigurations: [
           { columns: 3 }
         ],
-        orientation: 'portrait'
+        platformSpecs: PORTRAIT_PLATFORM_SPECS
       }
     ]
   }

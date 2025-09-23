@@ -2,8 +2,9 @@
 
 import { Platform } from './Platform'
 import { CoordinateTransformationService } from '@/services/CoordinateTransformationService'
-import { PanelOrientation, PanelSpacingService } from '@/services/PanelSpacingService'
-import { PANEL_SPECS, LANDSCAPE_PLATFORM_SPECS, VISUAL_SETTINGS } from '@/config/solarPanelInstallationSettings'
+import { PanelSpacingService } from '@/services/PanelSpacingService'
+import { PANEL_SPECS, VISUAL_SETTINGS } from '@/config/solarPanelInstallationSettings'
+import type { PlatformSpecs } from '@/services/PanelSpacingService'
 
 interface RowConfiguration {
   columns: number
@@ -16,20 +17,21 @@ interface RoofSolarInstallationProps {
     rows?: number
     columns?: number
     connectorLength?: number
-    orientation?: PanelOrientation
     // New per-row configuration
     rowConfigurations?: RowConfiguration[]
+    platformSpecs: PlatformSpecs
   }
 }
 
 export default function RoofSolarInstallation({
-  configuration = { rows: 6, columns: 1, connectorLength: LANDSCAPE_PLATFORM_SPECS.defaultConnectorLength, orientation: 'landscape' },
+  configuration = { rows: 6, columns: 1, connectorLength: 1.320, platformSpecs: { tiltAngle: 13, length: 1.145, thickness: 0.082, panelMountOffset: 0.15, orientation: 'landscape' } },
 }: RoofSolarInstallationProps) {
   const panels = []
   const connectors = []
 
-  const orientation = configuration.orientation || 'landscape'
-  const defaultConnectorLength = configuration.connectorLength || LANDSCAPE_PLATFORM_SPECS.defaultConnectorLength
+  const platformSpecs = configuration.platformSpecs
+  const orientation = platformSpecs.orientation
+  const defaultConnectorLength = configuration.connectorLength || 1.320
 
   // Determine if using new row-based configuration or legacy configuration
   let rowConfigs: RowConfiguration[]
@@ -53,9 +55,8 @@ export default function RoofSolarInstallation({
 
     const spacing = PanelSpacingService.calculateSpacing(
       PANEL_SPECS,
-      LANDSCAPE_PLATFORM_SPECS,
-      rowConnectorLength,
-      orientation
+      platformSpecs,
+      rowConnectorLength
     )
 
     const platformDimensions = {
@@ -84,6 +85,7 @@ export default function RoofSolarInstallation({
           }}
           orientation={orientation}
           includePanel={true}
+          tiltAngle={platformSpecs.tiltAngle}
         />
       )
     }

@@ -1,4 +1,5 @@
-import { WoodenShellConfiguration, Position3D, Dimensions3D } from '@/interfaces/WoodenShellTypes'
+import { WoodenShellConfiguration } from '@/interfaces/WoodenShellTypes'
+import { Position3D, Dimensions3D } from '@/types/common'
 
 export interface EnergyStorageConfig {
   position: Position3D

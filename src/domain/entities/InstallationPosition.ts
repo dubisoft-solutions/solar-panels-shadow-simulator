@@ -1,4 +1,5 @@
 import { Position3D } from '@/types/common'
+import { PlatformSpecs } from '@/services/PanelSpacingService'
 
 export interface InstallationPosition {
   areaId: string
@@ -15,7 +16,7 @@ export interface Installation3DConfiguration {
       columns: number
       connectorLength?: number
     }>
-    orientation?: 'landscape' | 'portrait'
+    platformSpecs: PlatformSpecs
   }
 }
 

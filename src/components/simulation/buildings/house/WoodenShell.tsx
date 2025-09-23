@@ -6,7 +6,7 @@ import { WoodenShellProps } from '@/interfaces/WoodenShellTypes'
 
 export default function WoodenShell({ configuration, materials }: WoodenShellProps) {
   const groupRef = useRef<THREE.Group>(null)
-  const { position, shellDimensions, beamSize, panlatSpecs, padding } = configuration
+  const { position, shellDimensions, beamSize, panlatSpecs } = configuration
   
   // Create wood grain textures using canvas
   const createWoodTexture = (width: number, height: number, grainDirection: 'horizontal' | 'vertical' | 'depth') => {
@@ -85,44 +85,6 @@ export default function WoodenShell({ configuration, materials }: WoodenShellPro
       {material}
     </mesh>
   )
-  
-  // Helper function to create an angled roof beam with bottom cut
-  const createAngledBeam = (
-    position: [number, number, number],
-    length: number,
-    angle: number,
-    key: string,
-    cutAngle: number = 30 * Math.PI / 180 // 30 degrees cut
-  ) => {
-    // Create a shape for the beam cross-section with angled bottom cut
-    const shape = new THREE.Shape()
-    const halfBeam = beamSize / 2
-    
-    // Create cross-section profile (looking down the length of the beam)
-    shape.moveTo(-halfBeam, -halfBeam)
-    shape.lineTo(halfBeam, -halfBeam + Math.tan(cutAngle) * beamSize) // Angled bottom
-    shape.lineTo(halfBeam, halfBeam)
-    shape.lineTo(-halfBeam, halfBeam)
-    shape.closePath()
-
-    const extrudeSettings = {
-      depth: beamSize, // Extrude along Z-axis for beam depth (50mm)
-      bevelEnabled: false
-    }
-    
-    return (
-      <mesh 
-        key={key}
-        position={position}
-        rotation={[-Math.PI/2, 0, angle]} // Rotate to orient correctly: X=length, Y=height, Z=depth
-        castShadow 
-        receiveShadow
-      >
-        <extrudeGeometry args={[shape, extrudeSettings]} />
-        {activeMaterials.mainBeam}
-      </mesh>
-    )
-  }
 
   // Calculate beam positions relative to shell center
   const halfWidth = shellDimensions.width / 2

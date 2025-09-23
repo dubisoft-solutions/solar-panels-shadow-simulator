@@ -12,7 +12,18 @@ export interface RowConfiguration {
 export interface InstallationArea {
   id: InstallationAreaId
   rowConfigurations: RowConfiguration[]
-  orientation: PanelOrientation
+  positionOffset?: {
+    x: number
+    y: number
+    z: number
+  }
+  platformSpecs: {
+    tiltAngle: number
+    length: number
+    thickness: number
+    panelMountOffset?: number
+    orientation: PanelOrientation
+  }
 }
 
 export interface LayoutConfiguration {

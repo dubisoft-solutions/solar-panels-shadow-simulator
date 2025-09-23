@@ -9,6 +9,7 @@ export interface PlatformSpecs {
   length: number    // Platform length (m)
   thickness: number // Platform thickness (m)
   panelMountOffset?: number // Panel mount offset from platform start (m)
+  orientation: PanelOrientation // Panel orientation
 }
 
 export type PanelOrientation = 'landscape' | 'portrait'
@@ -43,12 +44,11 @@ export class PanelSpacingService {
    * - β = Tilt angle in radians
    */
   static calculateProjectedDepth(
-    panelSpecs: PanelSpecs, 
-    platformSpecs: PlatformSpecs, 
-    orientation: PanelOrientation = 'landscape'
+    panelSpecs: PanelSpecs,
+    platformSpecs: PlatformSpecs
   ): number {
     const beta = platformSpecs.tiltAngle * Math.PI / 180  // Convert to radians
-    const tiltAxisDimension = this.getTiltAxisDimension(panelSpecs, orientation)
+    const tiltAxisDimension = this.getTiltAxisDimension(panelSpecs, platformSpecs.orientation)
     return tiltAxisDimension * Math.cos(beta)
   }
 
@@ -68,15 +68,15 @@ export class PanelSpacingService {
    * Calculate complete spacing information for solar panel rows
    */
   static calculateSpacing(
-    panelSpecs: PanelSpecs, 
-    platformSpecs: PlatformSpecs, 
-    connectorLength: number,
-    orientation: PanelOrientation = 'landscape'
+    panelSpecs: PanelSpecs,
+    platformSpecs: PlatformSpecs,
+    connectorLength: number
   ): SpacingCalculation {
+    const orientation = platformSpecs.orientation
     const tiltAxisDimension = this.getTiltAxisDimension(panelSpecs, orientation)
-    const projectedDepth = this.calculateProjectedDepth(panelSpecs, platformSpecs, orientation)
+    const projectedDepth = this.calculateProjectedDepth(panelSpecs, platformSpecs)
     const airGap = this.calculateAirGap(projectedDepth, connectorLength)
-    
+
     return {
       projectedDepth,
       airGap,
@@ -93,10 +93,9 @@ export class PanelSpacingService {
    * Get human-readable spacing information
    */
   static getSpacingInfo(
-    panelSpecs: PanelSpecs, 
-    platformSpecs: PlatformSpecs, 
-    connectorLength: number,
-    orientation: PanelOrientation = 'landscape'
+    panelSpecs: PanelSpecs,
+    platformSpecs: PlatformSpecs,
+    connectorLength: number
   ): {
     projectedDepthMm: number
     airGapMm: number
@@ -105,7 +104,8 @@ export class PanelSpacingService {
     orientation: PanelOrientation
     description: string
   } {
-    const spacing = this.calculateSpacing(panelSpecs, platformSpecs, connectorLength, orientation)
+    const spacing = this.calculateSpacing(panelSpecs, platformSpecs, connectorLength)
+    const orientation = platformSpecs.orientation
     
     return {
       projectedDepthMm: Math.round(spacing.projectedDepth * 1000),

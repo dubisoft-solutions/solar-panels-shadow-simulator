@@ -1,6 +1,6 @@
 import { Position3D } from '@/types/common'
 import { houseSettings } from '@/config/houseSettings'
-import { PANEL_SPECS, LANDSCAPE_PLATFORM_SPECS, PORTRAIT_PLATFORM_SPECS } from '@/config/solarPanelInstallationSettings'
+import { PANEL_SPECS } from '@/config/solarPanelInstallationSettings'
 import { PanelSpacingService } from '@/services/PanelSpacingService'
 import {
   ILayoutConfigurationService,
@@ -71,7 +71,7 @@ export class LayoutConfigurationService implements ILayoutConfigurationService {
         rotation,
         configuration: {
           rowConfigurations: installation.rowConfigurations,
-          orientation: installation.orientation
+          platformSpecs: installation.platformSpecs
         }
       }
     })
@@ -144,8 +144,7 @@ export class LayoutConfigurationService implements ILayoutConfigurationService {
     }
 
     const connectorLength = getConnectorLength()
-    const orientation = installation?.orientation ?? 'landscape'
-    const platformSpecs = orientation === 'portrait' ? PORTRAIT_PLATFORM_SPECS : LANDSCAPE_PLATFORM_SPECS
+    const platformSpecs = installation?.platformSpecs || { tiltAngle: 13, length: 1.145, thickness: 0.082, panelMountOffset: 0.15, orientation: 'landscape' }
 
     // Get maximum columns from row configurations
     const getMaxColumns = (): number => {
@@ -154,40 +153,39 @@ export class LayoutConfigurationService implements ILayoutConfigurationService {
     }
 
     const maxColumns = getMaxColumns()
+    const positionOffset = installation?.positionOffset ?? { x: 0, y: 0, z: 0 }
 
     switch (areaId) {
       case 'se':
         // Edge-based position calculation from Scene3D.tsx
         return {
-          x: 0.28 + houseSettings.roof.parapet.widths.west + PANEL_SPECS.length,
-          y: houseHeight + roofThickness,
-          z: houseSettings.roof.position.y + houseSettings.roof.dimensions.depth - houseSettings.roof.parapet.widths.south - 0.5
+          x: positionOffset.x + houseSettings.roof.parapet.widths.west + PANEL_SPECS.length,
+          y: houseHeight + roofThickness + positionOffset.y,
+          z: houseSettings.roof.position.y + houseSettings.roof.dimensions.depth - houseSettings.roof.parapet.widths.south - 0.5 + positionOffset.z
         }
 
       case 'sw1':
         const sw1Spacing = PanelSpacingService.calculateSpacing(
           PANEL_SPECS,
           platformSpecs,
-          connectorLength,
-          orientation
+          connectorLength
         )
         return {
-          x: houseWidth - connectorLength - sw1Spacing.projectedDepth,
-          y: houseHeight + roofThickness,
-          z: houseSettings.roof.parapet.widths.north + sw1Spacing.singleColWidth * maxColumns + 0.2
+          x: houseWidth - connectorLength - sw1Spacing.projectedDepth + positionOffset.x,
+          y: houseHeight + roofThickness + positionOffset.y,
+          z: houseSettings.roof.parapet.widths.north + sw1Spacing.singleColWidth * maxColumns + 0.2 + positionOffset.z
         }
 
       case 'sw2':
         const sw2Spacing = PanelSpacingService.calculateSpacing(
           PANEL_SPECS,
           platformSpecs,
-          connectorLength,
-          orientation
+          connectorLength
         )
         return {
-          x: houseWidth - connectorLength - sw2Spacing.projectedDepth,
-          y: houseHeight + roofThickness,
-          z: houseDepth + houseSettings.roof.parapet.widths.north - 0.04
+          x: houseWidth - connectorLength - sw2Spacing.projectedDepth + positionOffset.x,
+          y: houseHeight + roofThickness + positionOffset.y,
+          z: houseDepth + houseSettings.roof.parapet.widths.north - 0.04 + positionOffset.z
         }
         
 

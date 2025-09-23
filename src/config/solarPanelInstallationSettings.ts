@@ -14,7 +14,8 @@ export const LANDSCAPE_PLATFORM_SPECS = {
   length: 1.145,            // m
   thickness: 0.082,            // m
   panelMountOffset: 0.15,   // m (5cm offset from platform start)
-  defaultConnectorLength: 1.320  // m (configurable)
+  defaultConnectorLength: 1.320,  // m (configurable)
+  orientation: 'landscape' as const
 }
 
 export const PORTRAIT_PLATFORM_SPECS = {
@@ -22,7 +23,8 @@ export const PORTRAIT_PLATFORM_SPECS = {
   length: 1.826,            // m
   thickness: 0.082,            // m
   panelMountOffset: 0.05,   // m (5cm offset from platform start)
-  defaultConnectorLength: 1.320  // m (configurable)
+  defaultConnectorLength: 1.320,  // m (configurable)
+  orientation: 'portrait' as const
 }
 
 // Visual settings
