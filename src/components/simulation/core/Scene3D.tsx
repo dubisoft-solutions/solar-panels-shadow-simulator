@@ -197,17 +197,29 @@ function RoofObjects({ layout3DConfiguration }: { layout3DConfiguration: Layout3
       })}
 
       {/* Solar Panel Installations - using service-provided configuration */}
-      {layout3DConfiguration.installations.map(installation => (
-        <group
-          key={installation.id}
-          position={[installation.position.x, installation.position.y, installation.position.z]}
-          rotation={installation.rotation}
-        >
-          <RoofSolarInstallation
-            configuration={installation.configuration}
-          />
-        </group>
-      ))}
+      {layout3DConfiguration.installations.map(installation => {
+        // Create a unique key that includes configuration details to force remount on config change
+        const configKey = JSON.stringify({
+          id: installation.id,
+          rows: installation.configuration.rows,
+          columns: installation.configuration.columns,
+          connectorLength: installation.configuration.connectorLength,
+          rowConfigs: installation.configuration.rowConfigurations,
+          orientation: installation.configuration.platformSpecs.orientation
+        })
+
+        return (
+          <group
+            key={configKey}
+            position={[installation.position.x, installation.position.y, installation.position.z]}
+            rotation={installation.rotation}
+          >
+            <RoofSolarInstallation
+              configuration={installation.configuration}
+            />
+          </group>
+        )
+      })}
     </>
   )
 }
