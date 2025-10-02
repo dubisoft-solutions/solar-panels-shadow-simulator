@@ -201,11 +201,7 @@ function RoofObjects({ layout3DConfiguration }: { layout3DConfiguration: Layout3
         // Create a unique key that includes configuration details to force remount on config change
         const configKey = JSON.stringify({
           id: installation.id,
-          rows: installation.configuration.rows,
-          columns: installation.configuration.columns,
-          connectorLength: installation.configuration.connectorLength,
-          rowConfigs: installation.configuration.rowConfigurations,
-          orientation: installation.configuration.platformSpecs.orientation
+          config: installation.configuration
         })
 
         return (
